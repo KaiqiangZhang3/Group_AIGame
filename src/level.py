@@ -1,0 +1,179 @@
+# Proposed content for: /Users/kaiqiangzhang/3_game/Group_AIGame/src/level.py
+# Instruction: Implement checkpoint logic: setup groups, track last activated, activate on collision, provide respawn position via methods, trigger game's death screen callback, reset checkpoints. Pass game instance. (Concise version)
+
+import pygame
+from .settings import TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT, SKY_BLUE, CHECKPOINT_YELLOW
+from .tile import Tile
+from .player import Player
+from .moving_spike import MovingSpike
+
+class Level:
+    """Manages the game level, including tiles, player, and interactions."""
+    def __init__(self, level_data, surface, game_instance):
+        self.display_surface = surface
+        self.world_shift = 0
+        self.game = game_instance
+
+        # Sprite group setup
+        self.visible_sprites = YSortCameraGroup()
+        self.obstacle_sprites = pygame.sprite.Group()
+        self.exit_sprites = pygame.sprite.Group()
+        self.trap_sprites = pygame.sprite.Group()
+        self.checkpoint_sprites = pygame.sprite.Group()
+
+        # Player spawn and checkpoint tracking
+        self.initial_player_pos = None
+        self.last_checkpoint_pos = None
+        self.player = None
+
+        self.setup_level(level_data)
+
+    def setup_level(self, layout):
+        """Creates tiles and player based on the layout."""
+        # Clear groups and reset state for new level load
+        self.visible_sprites.empty()
+        self.obstacle_sprites.empty()
+        self.exit_sprites.empty()
+        self.trap_sprites.empty()
+        self.checkpoint_sprites.empty()
+        self.initial_player_pos = None
+        self.last_checkpoint_pos = None
+        self.player = None
+
+        for row_index, row in enumerate(layout):
+            for col_index, cell in enumerate(row):
+                x = col_index * TILE_SIZE
+                y = row_index * TILE_SIZE
+                pos = (x, y)
+
+                if cell == 'X':
+                    Tile(pos, [self.visible_sprites, self.obstacle_sprites], tile_type='platform')
+                elif cell == 'S':
+                    Tile(pos, [self.visible_sprites, self.trap_sprites], tile_type='trap')
+                elif cell == 'E':
+                    Tile(pos, [self.visible_sprites, self.exit_sprites], tile_type='exit')
+                elif cell == 'C': 
+                    # Checkpoint should NOT be an obstacle
+                    tile = Tile(pos, [self.visible_sprites], tile_type='checkpoint') 
+                    self.checkpoint_sprites.add(tile) # Add ONLY to the dedicated checkpoint group
+                elif cell == 'M': 
+                    # Create platform below the moving spike's path
+                    Tile((x, y), [self.visible_sprites, self.obstacle_sprites])
+                    # Create the Moving Spike itself (ensure it's added to traps)
+                    MovingSpike((x, y), [self.visible_sprites, self.trap_sprites])
+                elif cell == 'P': 
+                    if not self.initial_player_pos:
+                        self.initial_player_pos = pos
+
+        if self.initial_player_pos:
+            self.player = Player(
+                 self.initial_player_pos,
+                 [self.visible_sprites],
+                 self.obstacle_sprites,
+                 self.trap_sprites,
+                 self.exit_sprites,
+                 self.trigger_level_complete, 
+                 self.trigger_player_death
+            )
+        else:
+            print("Error: Player start position 'P' not found in level map!")
+            self.initial_player_pos = (100, 100)
+            self.player = Player(self.initial_player_pos, [self.visible_sprites], self.obstacle_sprites, self.trap_sprites, self.exit_sprites, self.trigger_level_complete, self.trigger_player_death)
+
+    def trigger_level_complete(self):
+        """Callback for when the player reaches the exit. Calls game's method."""
+        self.game.next_level()
+
+    def trigger_player_death(self):
+        """Callback for when the player hits a trap. Calls game's method."""
+        self.game.show_death_screen()
+
+    def check_checkpoint_collisions(self):
+        """Check for player collision with checkpoints and activate them."""
+        if not self.player: return # Don't check if player doesn't exist
+
+        collided_checkpoints = pygame.sprite.spritecollide(self.player, self.checkpoint_sprites, False)
+        for checkpoint in collided_checkpoints:
+            if not checkpoint.is_active:
+                for cp in self.checkpoint_sprites:
+                    if cp.is_active and cp != checkpoint:
+                         cp.is_active = False
+                         cp.image.fill(CHECKPOINT_YELLOW) 
+
+                checkpoint.activate() # Visually activate
+                self.last_checkpoint_pos = checkpoint.rect.topleft # Update last activated position
+
+    def get_respawn_position(self):
+        """Return the position where the player should respawn."""
+        respawn_pos = self.last_checkpoint_pos if self.last_checkpoint_pos else self.initial_player_pos
+        if not respawn_pos: 
+            print("Error: Cannot determine respawn position!")
+            return (100, 100) 
+        return respawn_pos
+
+    def reset_player_to_respawn(self):
+        """Reset the player's state and position to the last checkpoint or start."""
+        if self.player:
+            respawn_pos = self.get_respawn_position()
+            self.player.reset_state(respawn_pos)
+        else:
+            print("Error: Attempted to reset player, but player does not exist.")
+
+    def reset_checkpoints(self):
+        """Reset all checkpoints to inactive state visually when leaving level."""
+        self.last_checkpoint_pos = None 
+        for checkpoint in self.checkpoint_sprites:
+            if checkpoint.is_active:
+                checkpoint.is_active = False
+                checkpoint.image.fill(CHECKPOINT_YELLOW) 
+
+    def run(self):
+        """Update and draw all sprites in the level."""
+        if not self.player: return 
+
+        self.visible_sprites.custom_draw(self.player)
+
+        self.visible_sprites.update()
+
+        self.check_checkpoint_collisions()
+
+
+class YSortCameraGroup(pygame.sprite.Group):
+    def __init__(self):
+        super().__init__()
+        self.display_surface = pygame.display.get_surface()
+        self.half_width = self.display_surface.get_size()[0] // 2 if self.display_surface else SCREEN_WIDTH // 2
+        self.half_height = self.display_surface.get_size()[1] // 2 if self.display_surface else SCREEN_HEIGHT // 2
+        self.offset = pygame.math.Vector2()
+
+        bg_width = SCREEN_WIDTH * 2
+        bg_height = SCREEN_HEIGHT * 2
+        self.floor_surf = pygame.Surface((bg_width, bg_height))
+        self.floor_surf.fill(SKY_BLUE)
+        self.floor_rect = self.floor_surf.get_rect(topleft = (0,0))
+
+    def custom_draw(self, player):
+        """Draw layers, centering the camera on the player."""
+        if not self.display_surface: self.display_surface = pygame.display.get_surface() # Try to get surface again
+        if not self.display_surface: return # Cannot draw
+
+        # Calculate camera offset based on player center
+        self.offset.x = player.rect.centerx - self.half_width
+        self.offset.y = player.rect.centery - self.half_height
+
+        # --- Clamp Camera Offset --- 
+        # Prevent camera showing area left of the world start (x=0)
+        self.offset.x = max(0, self.offset.x)
+        # Prevent camera showing area above the world start (y=0) - adjust if needed
+        self.offset.y = max(0, self.offset.y) 
+        # Note: We might later need to add clamping for the right/bottom edges too,
+        # based on the actual size of the level map.
+
+        # Draw background first, applying the clamped offset
+        floor_offset_pos = self.floor_rect.topleft - self.offset
+        self.display_surface.blit(self.floor_surf, floor_offset_pos)
+
+        # Draw sprites sorted by Y (optional sort, depends on visuals)
+        for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
+             offset_pos = sprite.rect.topleft - self.offset # Calculate position relative to camera
+             self.display_surface.blit(sprite.image, offset_pos) # Draw the sprite
