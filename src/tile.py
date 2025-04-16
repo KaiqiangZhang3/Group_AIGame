@@ -3,12 +3,12 @@
 
 import pygame
 import os # Import os for path joining if needed, though using absolute path now
-from .settings import TILE_SIZE, EARTH_BROWN, SILVER, GREEN, CHECKPOINT_YELLOW, CHECKPOINT_ACTIVE_BLUE # Keep GREEN for fallback
+from .settings import TILE_SIZE, EARTH_BROWN, SILVER, GREEN, CHECKPOINT_YELLOW, CHECKPOINT_ACTIVE_BLUE, PURPLE # Keep GREEN for fallback
 
 # Construct the path relative to the tile.py file
-# Go up one level from src (..) to the project root, then down into asserts/images
+# Go up one level from src (..) to the project root, then down into assets/images
 BASE_DIR = os.path.dirname(os.path.dirname(__file__)) # Gets the Group_AIGame directory
-DOOR_IMAGE_PATH = os.path.join(BASE_DIR, 'asserts', 'images', '—Pngtree—vector painted open door_2570210.png')
+DOOR_IMAGE_PATH = os.path.join(BASE_DIR, 'assets', 'images', '—Pngtree—vector painted open door_2570210.png')
 
 class Tile(pygame.sprite.Sprite):
     """Represents a static tile in the game world (platform, trap, exit, checkpoint)."""
@@ -44,6 +44,9 @@ class Tile(pygame.sprite.Sprite):
             self.image.fill(CHECKPOINT_YELLOW) # Start yellow (inactive)
             # Could add more detail like a small rectangle post
             # pygame.draw.rect(self.image, BLACK, (TILE_SIZE // 2 - 2, TILE_SIZE // 2, 4, TILE_SIZE // 2)) # Example post
+        elif self.tile_type == 'H': # Hidden Door
+            self.image = pygame.Surface((TILE_SIZE, TILE_SIZE))
+            self.image.fill(PURPLE) # Hidden doors are purple
         else: # Default or unknown type
              self.image = pygame.Surface((TILE_SIZE, TILE_SIZE))
              self.image.fill(EARTH_BROWN) # Default to Earth Brown

@@ -1,0 +1,27 @@
+                                                                                   
+           P                                                                       
+          XXX                                                                      
+         X   X                                                                     
+        X     X                                                                    
+       XXX S XXX                                                                   
+      X   X X   X            C                                                     
+     X     X     X        XXXXXX                                                   
+    XXXXX   S   XXXXX    X      X                                                  
+   X     XXX XXX     X  X  S S  X                                                 
+  X       X   X       XXX  X X  XXX                                                
+ XXX  M            S  XXX        XXX         XXXXXX                               
+X   XXXXX        XXXXX X    C     X        X      X                               
+     X                 X X          X       X  S    X                              
+ XXX                 XXXXXXXXXXXXXX      XXXXXXXXXXX                             
+                                                                                   
+          XXXXX              XXXXX                                                 
+         X S S X            X S S X            XXXXXX                              
+        XXXXXXX            XXXXXXX            X      X                             
+       X                          X          X      X                             
+      X   XXXXXXXXXXXXXXXXXXXX   X          X M    S X                           
+     X   X                    X   X          XXXXXXXXXXXX                          
+    X   X     S S S S S      X   X                                                
+   X   XXXXXXXXXXXXXXXXXXXXXXXXX   X         X     X E                            
+  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                            
+ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                           
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                        

@@ -1,0 +1,24 @@
+
+P   E                                                                             
+XXXXX    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S     
+X   X   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    
+X M X   X                                                                        
+XXXXX   X                                                                        
+        X      C                                                                 
+        X   XXXXXX                                                               
+        X   X    X                                                               
+        X   X S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S  
+        X   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  
+        X                                                                        
+   M    X                                                                        
+XXXXXXXXX                                                                        
+                                                                                 
+             C                                                                   
+XXXXXXXX XXXXXXXXXXXXX                                                            
+X      X X           X          M           M           M           M           
+X S S SX X S S S S S X  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXX XXX XXXXXXXXXXXXX                                                           
+   X X                                                                           
+   X X           XXXXXXX                                                         
+   X X          X       X                                                        
+   XXX          XXXXXXXXX                                                        
