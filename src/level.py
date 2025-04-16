@@ -1,6 +1,3 @@
-# Proposed content for: /Users/kaiqiangzhang/3_game/Group_AIGame/src/level.py
-# Instruction: Implement checkpoint logic: setup groups, track last activated, activate on collision, provide respawn position via methods, trigger game's death screen callback, reset checkpoints. Pass game instance. (Concise version)
-
 import pygame
 from .settings import TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT, SKY_BLUE, CHECKPOINT_YELLOW
 from .tile import Tile
@@ -14,8 +11,12 @@ class Level:
         self.world_shift = 0
         self.game = game_instance
 
+        # map size
+        self.level_width = len(level_data[0]) * TILE_SIZE
+        self.level_height = len(level_data) * TILE_SIZE
+
         # Sprite group setup
-        self.visible_sprites = YSortCameraGroup()
+        self.visible_sprites = YSortCameraGroup(self.level_width, self.level_height)
         self.obstacle_sprites = pygame.sprite.Group()
         self.exit_sprites = pygame.sprite.Group()
         self.trap_sprites = pygame.sprite.Group()
@@ -139,41 +140,51 @@ class Level:
 
 
 class YSortCameraGroup(pygame.sprite.Group):
-    def __init__(self):
+    def __init__(self, level_width, level_height):
         super().__init__()
         self.display_surface = pygame.display.get_surface()
         self.half_width = self.display_surface.get_size()[0] // 2 if self.display_surface else SCREEN_WIDTH // 2
         self.half_height = self.display_surface.get_size()[1] // 2 if self.display_surface else SCREEN_HEIGHT // 2
         self.offset = pygame.math.Vector2()
 
-        bg_width = SCREEN_WIDTH * 2
-        bg_height = SCREEN_HEIGHT * 2
-        self.floor_surf = pygame.Surface((bg_width, bg_height))
-        self.floor_surf.fill(SKY_BLUE)
-        self.floor_rect = self.floor_surf.get_rect(topleft = (0,0))
+        # map size
+        self.level_width = level_width
+        self.level_height = level_height
+
+        # default background color and surface
+        self.default_bg_color = (0, 0, 0)
+        self.default_bg_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.default_bg_surf.fill(self.default_bg_color)
 
     def custom_draw(self, player):
         """Draw layers, centering the camera on the player."""
-        if not self.display_surface: self.display_surface = pygame.display.get_surface() # Try to get surface again
-        if not self.display_surface: return # Cannot draw
+        if not self.display_surface:
+            self.display_surface = pygame.display.get_surface()  # Try to get surface again
+        if not self.display_surface:
+            return  # Cannot draw
 
         # Calculate camera offset based on player center
         self.offset.x = player.rect.centerx - self.half_width
         self.offset.y = player.rect.centery - self.half_height
 
         # --- Clamp Camera Offset --- 
-        # Prevent camera showing area left of the world start (x=0)
-        self.offset.x = max(0, self.offset.x)
-        # Prevent camera showing area above the world start (y=0) - adjust if needed
-        self.offset.y = max(0, self.offset.y) 
-        # Note: We might later need to add clamping for the right/bottom edges too,
-        # based on the actual size of the level map.
+        max_x_offset = max(0, self.level_width - SCREEN_WIDTH)
+        max_y_offset = max(0, self.level_height - SCREEN_HEIGHT)
+        self.offset.x = max(0, min(self.offset.x, max_x_offset))
+        self.offset.y = max(0, min(self.offset.y, max_y_offset))
 
-        # Draw background first, applying the clamped offset
-        floor_offset_pos = self.floor_rect.topleft - self.offset
-        self.display_surface.blit(self.floor_surf, floor_offset_pos)
+        # --- Draw Default Background ---
+        self.display_surface.blit(self.default_bg_surf, (0, 0))
+
+        # --- Draw Map Background ---
+        map_rect = pygame.Rect(-self.offset.x, -self.offset.y, self.level_width, self.level_height)
+        pygame.draw.rect(
+            self.display_surface,
+            (173, 216, 230),  # Light blue color for the map background
+            map_rect
+        )
 
         # Draw sprites sorted by Y (optional sort, depends on visuals)
         for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
-             offset_pos = sprite.rect.topleft - self.offset # Calculate position relative to camera
-             self.display_surface.blit(sprite.image, offset_pos) # Draw the sprite
+            offset_pos = sprite.rect.topleft - self.offset  # Calculate position relative to camera
+            self.display_surface.blit(sprite.image, offset_pos)  # Draw the sprite
