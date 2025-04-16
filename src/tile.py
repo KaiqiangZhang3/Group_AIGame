@@ -5,9 +5,10 @@ import pygame
 import os # Import os for path joining if needed, though using absolute path now
 from .settings import TILE_SIZE, EARTH_BROWN, SILVER, GREEN, CHECKPOINT_YELLOW, CHECKPOINT_ACTIVE_BLUE # Keep GREEN for fallback
 
-# Define the path to the door image - using the absolute path provided
-# Make sure this path is correct and accessible
-DOOR_IMAGE_PATH = '/Users/kaiqiangzhang/3_game/Group_AIGame/asserts/images/—Pngtree—vector painted open door_2570210.png'
+# Construct the path relative to the tile.py file
+# Go up one level from src (..) to the project root, then down into asserts/images
+BASE_DIR = os.path.dirname(os.path.dirname(__file__)) # Gets the Group_AIGame directory
+DOOR_IMAGE_PATH = os.path.join(BASE_DIR, 'asserts', 'images', '—Pngtree—vector painted open door_2570210.png')
 
 class Tile(pygame.sprite.Sprite):
     """Represents a static tile in the game world (platform, trap, exit, checkpoint)."""
