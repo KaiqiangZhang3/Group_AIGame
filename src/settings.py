@@ -2,6 +2,7 @@
 # Instruction: Add menu colors and basic font settings.
 
 import pygame
+from enum import Enum, auto
 
 # Screen dimensions
 SCREEN_WIDTH = 1024
@@ -21,6 +22,14 @@ LIGHT_PINK = (255, 182, 193) # Player
 CHECKPOINT_YELLOW = (255, 255, 0) # Yellow for inactive checkpoints
 CHECKPOINT_ACTIVE_BLUE = (0, 0, 255) # Blue for active checkpoints
 SKY_BLUE = (135, 206, 235) # Added missing color
+
+# Game States Enum
+class GameState(Enum):
+    MENU = auto()
+    PLAYING = auto()
+    SETTINGS = auto() # Placeholder if needed
+    DEATH_SCREEN = auto()
+    GAME_OVER = auto() # Optional: If all levels completed
 
 # Player settings
 PLAYER_GRAVITY = 0.8
