@@ -1,11 +1,11 @@
 import pygame
 import sys
-from .settings import SCREEN_WIDTH, SCREEN_HEIGHT, WHITE, RED, BLACK, MENU_FONT_SIZE
+from src.settings import *
 
 class Menu:
     """Handles the main menu screen and input."""
-    def __init__(self, surface, game_instance):
-        self.display_surface = surface
+    def __init__(self, game_instance):
+        self.display_surface = game_instance.screen
         self.game = game_instance
 
         self.font = pygame.font.Font(None, MENU_FONT_SIZE)
@@ -37,6 +37,31 @@ class Menu:
             text_rect = self.option_rects[i]
             self.display_surface.blit(text_surf, text_rect)
 
+    def draw_menu(self):
+        self.display_surface.fill(BLACK)
+        title_text = self.game.font.render('Main Menu', True, WHITE)
+        start_text = self.game.small_font.render('Press ENTER to Start', True, WHITE)
+        quit_text = self.game.small_font.render('Press ESC to Quit', True, WHITE)
+        self.display_surface.blit(title_text, title_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/3)))
+        self.display_surface.blit(start_text, start_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)))
+        self.display_surface.blit(quit_text, quit_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 40)))
+
+    def draw_death_screen(self):
+        self.display_surface.fill(BLACK)
+        death_text = self.game.font.render('You Died!', True, RED)
+        respawn_text = self.game.small_font.render('Press [R] to Respawn', True, WHITE)
+        menu_text = self.game.small_font.render('Press [M] for Main Menu', True, WHITE)
+        self.display_surface.blit(death_text, death_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/3)))
+        self.display_surface.blit(respawn_text, respawn_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)))
+        self.display_surface.blit(menu_text, menu_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 40)))
+
+    def draw_game_over_screen(self):
+        self.display_surface.fill(BLACK)
+        over_text = self.game.font.render('All Levels Complete!', True, GREEN)
+        menu_text = self.game.small_font.render('Press [M] for Main Menu', True, WHITE)
+        self.display_surface.blit(over_text, over_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/3)))
+        self.display_surface.blit(menu_text, menu_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)))
+
     def handle_input(self, event):
         """Handles keyboard and mouse input for the menu."""
         if event.type == pygame.KEYDOWN:
@@ -46,6 +71,10 @@ class Menu:
                 self.selected_option = (self.selected_option + 1) % len(self.options)
             elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
                 self.select_option()
+            elif event.key == pygame.K_r: # Respawn
+                self.game.respawn()
+            elif event.key == pygame.K_m: # Return to Menu
+                self.return_to_menu() # Handles level cleanup and state change
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1: 

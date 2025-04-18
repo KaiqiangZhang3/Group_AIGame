@@ -1,8 +1,8 @@
 import pygame
-from .settings import TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT, SKY_BLUE, CHECKPOINT_YELLOW
-from .tile import Tile
-from .player import Player
-from .moving_spike import MovingSpike
+from src.settings import *
+from src.levels.tile import Tile
+from src.entities.player import Player
+from src.entities.moving_spike import MovingSpike
 
 class Level:
     """Manages the game level, including tiles, player, and interactions."""
@@ -87,7 +87,7 @@ class Level:
 
     def trigger_player_death(self):
         """Callback for when the player hits a trap. Calls game's method."""
-        self.game.show_death_screen()
+        self.game.current_state = GameState.DEATH_SCREEN
 
     def check_checkpoint_collisions(self):
         """Check for player collision with checkpoints and activate them."""

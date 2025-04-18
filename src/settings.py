@@ -1,7 +1,3 @@
-# Proposed changes for: /Users/kaiqiangzhang/3_game/Group_AIGame/src/settings.py
-# Instruction: Add menu colors and basic font settings.
-
-import pygame
 from enum import Enum, auto
 
 # Screen dimensions

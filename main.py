@@ -2,7 +2,7 @@
 # Instruction: Update main.py to simply instantiate and run the Game class.
 
 import pygame
-from src.game import Game # Correct import assuming game.py is in src
+from src.core.game import Game # Correct import assuming game.py is in src
 import sys # Import sys for clean exit
 
 def main():
