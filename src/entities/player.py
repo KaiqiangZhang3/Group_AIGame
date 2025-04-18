@@ -1,8 +1,5 @@
-# Proposed content for: /Users/kaiqiangzhang/3_game/Group_AIGame/src/player.py
-# Instruction: Update Player class to handle trap collisions, accept trap sprites/reset callback, exit sprites, and level complete callback.
-
 import pygame
-from .settings import *
+from src.settings import *
 
 class Player(pygame.sprite.Sprite):
     """Represents the player character."""
@@ -45,7 +42,14 @@ class Player(pygame.sprite.Sprite):
         # Status flags
         self.on_ground = False
 
-    def input(self):
+    def one_time_input(self, event):
+        """Handle one-time input for jumping and dashing."""
+        if event.key == pygame.K_SPACE or event.key == pygame.K_UP or event.key == pygame.K_w:
+            self.jump()
+        elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
+            self.dash()
+
+    def continually_input(self):
         """Handle player input for movement, jumping, and dashing."""
         keys = pygame.key.get_pressed()
 
@@ -193,7 +197,7 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         """Update player state (called every frame)."""
         # Input polling is still useful for continuous movement (left/right)
-        self.input() # Poll left/right keys
+        self.continually_input() # Poll left/right keys
 
         # Update dash state (timers, cooldown)
         self.update_dash()
