@@ -66,20 +66,16 @@ class Level:
                     if not self.initial_player_pos:
                         self.initial_player_pos = pos
 
-        if self.initial_player_pos:
-            self.player = Player(
-                 self.initial_player_pos,
-                 [self.visible_sprites],
-                 self.obstacle_sprites,
-                 self.trap_sprites,
-                 self.exit_sprites,
-                 self.trigger_level_complete, 
-                 self.trigger_player_death
-            )
-        else:
-            print("Error: Player start position 'P' not found in level map!")
-            self.initial_player_pos = (100, 100)
-            self.player = Player(self.initial_player_pos, [self.visible_sprites], self.obstacle_sprites, self.trap_sprites, self.exit_sprites, self.trigger_level_complete, self.trigger_player_death)
+        self.initial_player_pos = self.initial_player_pos if self.initial_player_pos else (100, 100) # Fallback position
+        self.player = Player(
+            self.initial_player_pos,
+            [self.visible_sprites],
+            self.obstacle_sprites,
+            self.trap_sprites,
+            self.exit_sprites,
+            self.trigger_level_complete, 
+            self.trigger_player_death
+        )
 
     def trigger_level_complete(self):
         """Callback for when the player reaches the exit. Calls game's method."""
