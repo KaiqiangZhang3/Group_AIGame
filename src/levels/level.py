@@ -83,7 +83,7 @@ class Level:
 
     def trigger_level_complete(self):
         """Callback for when the player reaches the exit. Calls game's method."""
-        self.game.next_level()
+        self.game.level_manager.next_level()
 
     def trigger_player_death(self):
         """Callback for when the player hits a trap. Calls game's method."""
@@ -117,6 +117,7 @@ class Level:
         if self.player:
             respawn_pos = self.get_respawn_position()
             self.player.reset_state(respawn_pos)
+            self.game.current_state = GameState.PLAYING
         else:
             print("Error: Attempted to reset player, but player does not exist.")
 

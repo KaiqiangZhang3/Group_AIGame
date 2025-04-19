@@ -72,7 +72,8 @@ class Menu:
             elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
                 self.select_option()
             elif event.key == pygame.K_r: # Respawn
-                self.game.respawn()
+                if self.game.level_manager.level:
+                    self.game.level_manager.level.reset_player_to_respawn()
             elif event.key == pygame.K_m: # Return to Menu
                 self.return_to_menu() # Handles level cleanup and state change
 
@@ -98,7 +99,17 @@ class Menu:
         print(f"Menu option selected: {selected_text}")
 
         if selected_text == "Start Game":
-            self.game.load_level(0) 
+            self.game.level_manager.load_level(0) 
         elif selected_text == "Exit":
             pygame.quit()
             sys.exit()
+
+    def return_to_menu(self):
+        """Return to the main menu."""
+        print("Returning to menu...")
+        if self.game.level_manager.level:
+             self.game.level_manager.level.reset_checkpoints() # Reset checkpoints before leaving
+             self.game.level_manager.level = None # Unload the level
+        self.game.level_manager.current_level_index = 0 # Reset level index? Optional.
+        self.game.current_state = GameState.MENU # Use Enum member
+
