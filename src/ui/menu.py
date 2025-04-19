@@ -99,7 +99,7 @@ class Menu:
         print(f"Menu option selected: {selected_text}")
 
         if selected_text == "Start Game":
-            self.game.level_manager.load_level(0) 
+            self.game.level_manager.game_entry() # Load the first level
         elif selected_text == "Exit":
             pygame.quit()
             sys.exit()
