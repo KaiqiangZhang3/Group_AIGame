@@ -1,5 +1,7 @@
 from enum import Enum, auto
 
+GAME_NAME = "I Wanna Study Computer Science"
+
 # Screen dimensions
 SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 768

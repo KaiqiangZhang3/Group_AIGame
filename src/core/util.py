@@ -2,6 +2,10 @@ import pygame
 import sys
 from src.settings import GameState
 
+def events_handler(events, game_instance):   
+    for event in events:
+        event_handler(event, game_instance) # Handle events for the current state
+
 def event_handler(event, game_instance):
     """Handle events for the current game state."""
     match event.type:
