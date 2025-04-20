@@ -41,12 +41,13 @@ class Player(pygame.sprite.Sprite):
 
         # Status flags
         self.on_ground = False
-
-    def one_time_input(self, event):
-        """Handle one-time input for jumping and dashing."""
-        if event.key == pygame.K_SPACE or event.key == pygame.K_UP or event.key == pygame.K_w:
+    
+    def process_input(self, input_buffer):
+        """Process player input from the input buffer."""
+        # Check for buffered inputs and handle them
+        if input_buffer.get_and_remove_input(pygame.K_SPACE) or input_buffer.get_and_remove_input(pygame.K_UP) or input_buffer.get_and_remove_input(pygame.K_w):
             self.jump()
-        elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
+        if input_buffer.get_and_remove_input(pygame.K_LSHIFT) or input_buffer.get_and_remove_input(pygame.K_RSHIFT):
             self.dash()
 
     def continually_input(self):

@@ -2,7 +2,8 @@ import pygame
 from src.settings import *
 from src.ui.menu import Menu
 from src.levels.level_manager import LevelManager
-from src.core.util import events_handler, draw_frame
+from src.core.util import events_handler, draw_frame, player_input
+from src.core.input_buffer import InputBuffer
 
 class Game:
     """Main game class managing states, levels, and menus."""
@@ -16,6 +17,7 @@ class Game:
         self.small_font = pygame.font.SysFont(None, 36)
         print("Starting game...")
 
+        self.input_buffer = InputBuffer() # Initialize input buffer
         self.current_state = GameState.MENU # Start in the menu
         self.menu = Menu(self)
         self.level_manager = LevelManager(self) # Pass self to LevelManager
@@ -24,7 +26,9 @@ class Game:
         while True:
             # --- Event Handling ---
             events_handler(pygame.event.get(), self)
+            player_input(self) # Process player input based on the current state
             draw_frame(self) # Draw the current frame based on state
+            self.input_buffer.clear_expired_inputs() # Clear expired inputs from the buffer
             # --- Final Update --- 
             pygame.display.flip() # Update the full display surface once per frame
             self.clock.tick(FPS)

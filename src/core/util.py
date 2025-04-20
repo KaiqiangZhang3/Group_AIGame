@@ -21,9 +21,17 @@ def keyboard_handler(event, game_instance):
     """Handle keyboard input based on the current game state."""
     match game_instance.current_state:
         case GameState.PLAYING:  # Use Enum member
-            game_instance.level_manager.level.player.one_time_input(event)  # Assuming player has one_time_input method
+            game_instance.input_buffer.add_input(event.key)  # Buffer the key press
         case _:
             game_instance.menu.handle_input(event)  # Assuming Menu has handle_input
+
+def player_input(game_instance):
+    """Process player input for the current game state."""
+    match game_instance.current_state:
+        case GameState.PLAYING:  # Use Enum member
+            game_instance.level_manager.level.player.process_input(game_instance.input_buffer)  # Assuming player has process_input method
+        case _:
+            pass  # No player input to process in other states
 
 def draw_frame(game_instance):
     """Draw a single frame of the game."""
