@@ -36,7 +36,7 @@ class Player(pygame.sprite.Sprite):
         keys = pygame.key.get_pressed()
 
         # Horizontal Movement (unless dashing)
-        if not self.movement_state.is_dashing:
+        if not self.movement_state.is_dashing and not self.movement_state.is_super_jumping:
             if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
                 self.movement_state.move_right()
             elif keys[pygame.K_LEFT] or keys[pygame.K_a]:
@@ -48,9 +48,10 @@ class Player(pygame.sprite.Sprite):
         """Handle horizontal collisions with obstacles, considering dash."""
         # Only apply movement if direction is non-zero or dashing
         self.rect.x += self.movement_state.velocity[0]
-        if self.movement_state.is_dashing or self.movement_state.is_running:
+        if self.movement_state.velocity[0] != 0 or self.movement_state.is_dashing:
              for sprite in self.obstacle_sprites:
                  if sprite.rect.colliderect(self.rect):
+                     print("Horizontal collision detected!" + str(sprite.rect))
                      self.movement_state.stop_horizontal() # Stop on collision
                      if self.movement_state.direction > 0: # Moving right
                          self.rect.right = sprite.rect.left
@@ -64,7 +65,8 @@ class Player(pygame.sprite.Sprite):
         previous_on_ground = self.movement_state.on_ground
         self.movement_state.on_ground = False # Assume not on ground until collision check
         self.movement_state.air_frames += 1 # Increment air frames
-
+        if self.movement_state.is_dashing:
+            self.movement_state.velocity[1] = 0 # Stop vertical movement during dash
         # Check collision after potential vertical movement
         for sprite in self.obstacle_sprites:
             if sprite.rect.colliderect(self.rect):

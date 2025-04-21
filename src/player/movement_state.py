@@ -9,10 +9,13 @@ class MovementState:
 
         self.can_jump = True
         self.can_dash = True
+        self.can_double_jump = True
 
         self.dash_timer = 0
         self.dash_cooldown_timer = 0
+        self.dash_frame = 0
 
+        self.is_super_jumping = False
         self.is_dashing = False
         self.on_ground = True
         self.is_running = False
@@ -40,9 +43,21 @@ class MovementState:
 
     def jump(self):
         """Trigger a jump if not already jumping or falling."""
-        if (self.on_ground or self.air_frames < 6) and self.can_jump:
+        print(self.is_dashing, self.dash_frame)
+        if self.is_dashing and self.dash_frame <= PLAYER_DASH_PREPARE_FRAMES and self.can_jump:
+            self.is_dashing = False
+            self.is_super_jumping = True
+            self.can_jump = False
+            self.velocity[0] = self.dash_speed * self.direction * PLAYER_SUPER_JUMP_STRENGTH_RATE
+            self.velocity[1] = self.jump_force
+        elif self.can_double_jump and self.air_frames > JUMP_TOLERANCE_FRAME:
+            self.can_double_jump = False
+            self.is_idle = False
+            self.velocity[1] = self.jump_force * PLAYER_DOUBLE_JUMP_STRENGTH_RATE
+        elif (self.on_ground or self.air_frames < JUMP_TOLERANCE_FRAME) and self.can_jump and not self.is_dashing:
             self.on_ground = False
             self.is_idle = False
+            self.can_jump = False
             self.velocity[1] = self.jump_force
 
     def dash(self):
@@ -52,21 +67,21 @@ class MovementState:
             self.can_dash = False
             self.dash_timer = PLAYER_DASH_DURATION
             self.dash_cooldown_timer = PLAYER_DASH_COOLDOWN
-            self.velocity[0] = self.dash_speed * self.direction
-            self.velocity[1] = 0  # Reset vertical speed during dash
+            self.dash_frame = 0
 
     def update_dash(self):
         """Update the dash state."""
         if self.dash_timer > 0:
             self.dash_timer -= 1
-            self.velocity[1] = 0
+            self.dash_frame += 1
             if self.dash_timer <= 0:
                 self.is_dashing = False
-
-        if not self.can_dash:
-            self.dash_cooldown_timer -= 1
-            if self.dash_cooldown_timer <= 0:
-                self.can_dash = True
+                self.is_super_jumping = False
+            else:
+                if self.dash_frame > PLAYER_DASH_PREPARE_FRAMES:
+                    self.velocity[0] = self.dash_speed * self.direction
+                elif self.dash_frame <= PLAYER_DASH_PREPARE_FRAMES and not self.is_super_jumping:
+                    self.velocity[0] = 0
 
     def move_left(self):
         """Move the character to the left."""
@@ -98,6 +113,7 @@ class MovementState:
         """Reset the movement state actions."""
         self.can_dash = True
         self.can_jump = True
+        self.can_double_jump = True
 
     def deaccelerate(self):
         """Gradually reduce horizontal speed."""
