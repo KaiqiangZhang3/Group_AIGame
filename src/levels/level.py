@@ -1,7 +1,7 @@
 import pygame
 from src.settings import *
 from src.levels.tile import Tile
-from src.entities.player import Player
+from src.player.player import Player
 from src.entities.moving_spike import MovingSpike
 
 class Level:

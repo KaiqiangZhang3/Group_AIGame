@@ -30,10 +30,10 @@ class GameState(Enum):
     GAME_OVER = auto() # Optional: If all levels completed
 
 # Player settings
-PLAYER_GRAVITY = 0.8
-PLAYER_JUMP_STRENGTH = -16 # Increased initial jump height
+PLAYER_GRAVITY = 0.6
+PLAYER_JUMP_STRENGTH = -12 # Increased initial jump height
 PLAYER_DOUBLE_JUMP_STRENGTH = -13 # Increased strength of the second jump
-PLAYER_SPEED = 5
+PLAYER_SPEED = 7
 PLAYER_DASH_SPEED = 15   # Speed during dash
 PLAYER_DASH_DURATION = 8 # Duration of dash in frames
 PLAYER_DASH_COOLDOWN = 30  # Cooldown period for dash in frames
