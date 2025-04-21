@@ -54,18 +54,18 @@ XXXXX       C
 X   X      XXX                                                                   
 X   X     X S X                                                                  
 XXXXX    XXXXXXX                                                                 
-         X     X         XXXX                                                    
-         X     X        X    X                                                   
-         XXXXXXX       X S  S X        C                                         
-                      XXXXXXXXXX     XXXXX        SSSSSSS                        
-                                    X     X      X       X                       
- XXX                               X S S S X    XX S S S XX                      
-X S X                             XXXXXXXXX   XXX       XXX                      
-XXXXX                                          XXXXX   XXXXX                     
-                                                X     X     X                    
-        XXXXXXXXXXXXXXXXXXXXXXXXXXXXX              M    S XXXX                   
-       X                             X        XXXXXXXXXXXXXXXXXXXXXX             
-      X S S S S S S S S S S S S S S S X      X                  XX E             
+X        X     X         XXXX                                                    
+X        X     X        X    X                                                   
+X        XXXXXXX       X S  S X        C                                         
+X                     XXXXXXXXXX     XXXXX        SSSSSSS                        
+X                                   X     X      X       X                       
+X                                  X S S S X    XX S S S XX                      
+X                                 XXXXXXXXX   XXX       XXX                      
+X                                              XXXXX   XXXXX                     
+X                                                X     X     X                    
+X       XXXXXXXXXXXXXXXXXXXXXXXXXXXXX              M    S XXXX                   
+X      X                             X        XXXXXXXXXXXXXXXXXXXXXX             
+X     X S S S S S S S S S S S S S S S X      X                  XX E             
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX      
 """,
     name="Level 1",

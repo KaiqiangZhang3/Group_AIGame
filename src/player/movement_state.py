@@ -12,9 +12,11 @@ class MovementState:
         self.can_double_jump = True
 
         self.dash_timer = 0
-        self.dash_cooldown_timer = 0
         self.dash_frame = 0
+        self.climbing_jump_frame = 0
 
+        self.is_climbing = False
+        self.is_climbing_jump = False
         self.is_super_jumping = False
         self.is_dashing = False
         self.on_ground = True
@@ -38,18 +40,26 @@ class MovementState:
 
     def update(self):
         """Update the movement state based on velocity and gravity."""
+        self.update_climbing_jump()
+        if self.is_climbing_jump: return
         self.apply_gravity()
         self.update_dash()
+        self.update_climbing()
+
 
     def jump(self):
         """Trigger a jump if not already jumping or falling."""
-        print(self.is_dashing, self.dash_frame)
         if self.is_dashing and self.dash_frame <= PLAYER_DASH_PREPARE_FRAMES and self.can_jump:
             self.is_dashing = False
             self.is_super_jumping = True
             self.can_jump = False
             self.velocity[0] = self.dash_speed * self.direction * PLAYER_SUPER_JUMP_STRENGTH_RATE
             self.velocity[1] = self.jump_force
+        elif self.is_climbing:
+            self.is_climbing_jump = True
+            self.is_idle = False
+            self.is_climbing = False
+            self.climbing_jump_frame = 0
         elif self.can_double_jump and self.air_frames > JUMP_TOLERANCE_FRAME:
             self.can_double_jump = False
             self.is_idle = False
@@ -66,7 +76,6 @@ class MovementState:
             self.is_dashing = True
             self.can_dash = False
             self.dash_timer = PLAYER_DASH_DURATION
-            self.dash_cooldown_timer = PLAYER_DASH_COOLDOWN
             self.dash_frame = 0
 
     def update_dash(self):
@@ -115,7 +124,7 @@ class MovementState:
         self.can_jump = True
         self.can_double_jump = True
 
-    def deaccelerate(self):
+    def decelerate(self):
         """Gradually reduce horizontal speed."""
         if self.is_running:
             if self.velocity[0] > 0:
@@ -132,4 +141,26 @@ class MovementState:
         self.is_falling = False
         self.is_running = False
         self.is_idle = True
-        self.velocity = [0, 0] 
+        self.velocity = [0, 0]
+    
+    def start_climbing(self):
+        """Start climbing."""
+        self.is_climbing = True
+        self.air_frames = 0
+        self.reset_actions()
+    
+    def update_climbing(self):
+        """Update climbing state."""
+        if self.is_climbing:
+            self.velocity[1] = 1
+            self.velocity[0] = 0.4 * self.direction
+
+    def update_climbing_jump(self):
+        """Update climbing jump state."""
+        if self.is_climbing_jump:
+            self.climbing_jump_frame += 1
+            if self.climbing_jump_frame > 6:
+                self.is_climbing_jump = False
+            else:
+                self.velocity[1] = -8
+                self.velocity[0] = 6 * -self.direction

@@ -25,6 +25,7 @@ class Player(pygame.sprite.Sprite):
     
     def process_input(self, input_buffer):
         """Process player input from the input buffer."""
+        if self.movement_state.is_climbing_jump: return
         # Check for buffered inputs and handle them
         if input_buffer.get_and_remove_input(pygame.K_SPACE) or input_buffer.get_and_remove_input(pygame.K_UP) or input_buffer.get_and_remove_input(pygame.K_w):
             self.movement_state.jump() # Jump action
@@ -33,25 +34,27 @@ class Player(pygame.sprite.Sprite):
 
     def continually_input(self):
         """Handle player input for movement, jumping, and dashing."""
+        if self.movement_state.is_climbing_jump: return
         keys = pygame.key.get_pressed()
 
-        # Horizontal Movement (unless dashing)
         if not self.movement_state.is_dashing and not self.movement_state.is_super_jumping:
             if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
                 self.movement_state.move_right()
             elif keys[pygame.K_LEFT] or keys[pygame.K_a]:
                 self.movement_state.move_left()
             else:
-                self.movement_state.deaccelerate()
+                self.movement_state.decelerate()
 
     def horizontal_collision(self):
         """Handle horizontal collisions with obstacles, considering dash."""
         # Only apply movement if direction is non-zero or dashing
         self.rect.x += self.movement_state.velocity[0]
+        self.movement_state.is_climbing = False
         if self.movement_state.velocity[0] != 0 or self.movement_state.is_dashing:
              for sprite in self.obstacle_sprites:
                  if sprite.rect.colliderect(self.rect):
-                     print("Horizontal collision detected!" + str(sprite.rect))
+                     if not self.movement_state.on_ground and self.movement_state.air_frames > 6:
+                         self.movement_state.start_climbing()
                      self.movement_state.stop_horizontal() # Stop on collision
                      if self.movement_state.direction > 0: # Moving right
                          self.rect.right = sprite.rect.left
@@ -74,6 +77,7 @@ class Player(pygame.sprite.Sprite):
                     self.rect.bottom = sprite.rect.top
                     self.movement_state.on_ground = True
                     self.movement_state.air_frames = 0 # Reset air frames
+                    self.movement_state.is_climbing = False # Stop climbing
                 elif self.movement_state.velocity[1] < 0: # Moving up (jumping)
                     self.rect.top = sprite.rect.bottom
                 self.movement_state.velocity[1] = 0 # Stop upward movement
@@ -107,7 +111,7 @@ class Player(pygame.sprite.Sprite):
         # Input polling is still useful for continuous movement (left/right)
         self.continually_input() # Poll left/right keys
         self.movement_state.update()
-
+        print(self.movement_state.is_climbing)
         # Apply movement and collisions
         self.vertical_collision() # Includes gravity application
         self.horizontal_collision()
