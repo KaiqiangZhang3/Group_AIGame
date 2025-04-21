@@ -29,7 +29,10 @@ class GameState(Enum):
     DEATH_SCREEN = auto()
     GAME_OVER = auto() # Optional: If all levels completed
 
-# Player settings
+# Player setting
+ACELERATION_FRAME = 6 # Frames to reach max speed
+DECELERATION_FRAME = 3 # Frames to stop from max speed
+CLIMBING_JUMP_FRAME = 6
 PLAYER_GRAVITY = 0.6
 JUMP_TOLERANCE_FRAME = 6
 PLAYER_JUMP_STRENGTH = -11 # Increased initial jump height
@@ -37,7 +40,7 @@ PLAYER_DOUBLE_JUMP_STRENGTH_RATE = 0.8
 PLAYER_SPEED = 7
 PLAYER_SUPER_JUMP_STRENGTH_RATE = 1.5
 PLAYER_DASH_PREPARE_FRAMES = 5 # Frames before dash to prepare
-PLAYER_DASH_SPEED = 25   # Speed during dash
+PLAYER_DASH_SPEED = 20   # Speed during dash
 PLAYER_DASH_DURATION = 13 # Duration of dash in frames
 PLAYER_DASH_COOLDOWN = 30  # Cooldown period for dash in frames
 

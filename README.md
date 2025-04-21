@@ -29,12 +29,12 @@ A 2D platform jumping game developed with Pygame, combining precise jumping, tra
    cd Group_AIGame
    ```
 
-2. Install dependencies:
+1. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Run the game:
+1. Run the game:
    ```bash
    python main.py
    ```
