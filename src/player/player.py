@@ -22,11 +22,19 @@ class Player(pygame.sprite.Sprite):
         self.exit_sprites = exit_sprites # Store exit sprites
         self.level_complete_callback = level_complete_callback # For reaching exit
         self.death_callback = death_callback # Store death callback (for hitting traps)
+
+        # Singing visual effect state
+        self.singing_effect_timer = 0.0 # Countdown timer for the effect
+        self.color_cycle_index = 0      # Index for RAINBOW_COLORS
     
     def process_input(self, input_buffer):
         """Process player input from the input buffer."""
         # Check for buffered inputs and handle them
-        if input_buffer.get_and_remove_input(pygame.K_SPACE) or input_buffer.get_and_remove_input(pygame.K_UP) or input_buffer.get_and_remove_input(pygame.K_w):
+        # Check for jump keys OR the 'jump' string command from voice
+        if (input_buffer.get_and_remove_input(pygame.K_SPACE) or
+            input_buffer.get_and_remove_input(pygame.K_UP) or
+            input_buffer.get_and_remove_input(pygame.K_w) or
+            input_buffer.get_and_remove_input('jump')): # Add check for 'jump' string
             self.movement_state.jump() # Jump action
         if input_buffer.get_and_remove_input(pygame.K_LSHIFT) or input_buffer.get_and_remove_input(pygame.K_RSHIFT):
             self.movement_state.dash() # Dash action
@@ -105,13 +113,36 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         """Update player state (called every frame)."""
         # Input polling is still useful for continuous movement (left/right)
+        # --- Singing Effect Update --- START ---
+        dt = 1 / FPS # Approximate time delta (could be passed from game loop for accuracy)
+        if self.singing_effect_timer > 0:
+            self.singing_effect_timer -= dt
+            # Cycle color every few frames (adjust the modulo value for speed)
+            # A simple way is to advance index based on time or frames
+            # Let's advance every ~0.1 seconds for a visible change
+            if pygame.time.get_ticks() % 100 < 20: # Check roughly every 100ms
+                 self.color_cycle_index = (self.color_cycle_index + 1) % len(RAINBOW_COLORS)
+
+            # Apply the current rainbow color
+            current_color = RAINBOW_COLORS[self.color_cycle_index]
+            diameter = TILE_SIZE - 8
+            # Re-create the surface or just fill it - filling is likely faster
+            self.image.fill((0,0,0,0)) # Clear with transparency
+            pygame.draw.circle(self.image, current_color, (diameter // 2, diameter // 2), diameter // 2)
+
+            if self.singing_effect_timer <= 0:
+                # Reset to default color when timer expires
+                self.singing_effect_timer = 0 # Ensure it's exactly 0
+                diameter = TILE_SIZE - 8
+                self.image.fill((0,0,0,0))
+                pygame.draw.circle(self.image, LIGHT_PINK, (diameter // 2, diameter // 2), diameter // 2)
+        # --- Singing Effect Update --- END ---
         self.continually_input() # Poll left/right keys
         self.movement_state.update()
 
         # Apply movement and collisions
         self.vertical_collision() # Includes gravity application
         self.horizontal_collision()
-
 
         # Check for interactions AFTER movement/collision resolution
         self.check_trap_collision() # Check for trap collisions

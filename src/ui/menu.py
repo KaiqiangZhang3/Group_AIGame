@@ -10,7 +10,8 @@ class Menu:
 
         self.font = pygame.font.Font(None, MENU_FONT_SIZE)
 
-        self.options = ["Start Game", "Exit"]
+        # Define base menu options
+        self.options = ["Start Game", "Toggle Camera", "Exit"]
         self.selected_option = 0
         self.option_rects = []
 
@@ -32,8 +33,14 @@ class Menu:
         self.display_surface.fill(BLACK)
 
         for i, option in enumerate(self.options):
+            # Determine the text to display dynamically for camera option
+            text_to_render = option
+            if option == "Toggle Camera":
+                status = "ON" if self.game.camera_enabled else "OFF"
+                text_to_render = f"Camera: {status}"
+
             color = RED if i == self.selected_option else WHITE
-            text_surf = self.font.render(option, True, color)
+            text_surf = self.font.render(text_to_render, True, color)
             text_rect = self.option_rects[i]
             self.display_surface.blit(text_surf, text_rect)
 
@@ -95,12 +102,17 @@ class Menu:
 
     def select_option(self):
         """Executes the action for the selected menu option."""
-        selected_text = self.options[self.selected_option]
-        print(f"Menu option selected: {selected_text}")
+        # Get the base option identifier (not the dynamic text)
+        base_option_text = self.options[self.selected_option]
+        print(f"Menu option selected: {base_option_text}")
 
-        if selected_text == "Start Game":
+        if base_option_text == "Start Game":
             self.game.level_manager.game_entry() # Load the first level
-        elif selected_text == "Exit":
+        elif base_option_text == "Toggle Camera":
+            self.game.toggle_camera() # Call the toggle method in Game class
+            # We need to recalculate menu layout if text length changes significantly, but ON/OFF should be similar
+            # self._setup_options() # Optional: Recalculate if needed
+        elif base_option_text == "Exit":
             pygame.quit()
             sys.exit()
 
@@ -112,4 +124,3 @@ class Menu:
              self.game.level_manager.level = None # Unload the level
         self.game.level_manager.current_level_index = 0 # Reset level index? Optional.
         self.game.current_state = GameState.MENU # Use Enum member
-

@@ -1,4 +1,5 @@
 from enum import Enum, auto
+import pygame
 
 GAME_NAME = "I Wanna Study Computer Science"
 
@@ -20,6 +21,26 @@ LIGHT_PINK = (255, 182, 193) # Player
 CHECKPOINT_YELLOW = (255, 255, 0) # Yellow for inactive checkpoints
 CHECKPOINT_ACTIVE_BLUE = (0, 0, 255) # Blue for active checkpoints
 SKY_BLUE = (135, 206, 235) # Added missing color
+
+# Custom Pygame Events for Voice Commands
+VOICE_COMMAND_EVENT = pygame.USEREVENT + 1
+NEXT_LEVEL_VOICE_EVENT = pygame.USEREVENT + 2
+SINGING_DETECTED_EVENT = pygame.USEREVENT + 3 # New event for singing
+
+# Audio Analysis
+SINGING_PITCH_STD_THRESHOLD = 25.0 # Hz - Lower value means more stable pitch needed to classify as singing. Needs tuning!
+
+# Singing Visual Effect
+RAINBOW_COLORS = [
+    (255, 0, 0),    # Red
+    (255, 127, 0),  # Orange
+    (255, 255, 0),  # Yellow
+    (0, 255, 0),    # Green
+    (0, 0, 255),    # Blue
+    (75, 0, 130),   # Indigo
+    (148, 0, 211)   # Violet
+]
+SINGING_EFFECT_DURATION = 1.0 # Seconds the effect lasts after singing stops
 
 # Game States Enum
 class GameState(Enum):
