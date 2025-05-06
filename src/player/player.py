@@ -1,6 +1,7 @@
 import pygame
 from src.settings import *
 from src.player.movement_state import MovementState
+from src.settings import VOICE_COMMAND_JUMP
 
 class Player(pygame.sprite.Sprite):
     """Represents the player character."""
@@ -27,7 +28,10 @@ class Player(pygame.sprite.Sprite):
         """Process player input from the input buffer."""
         if self.movement_state.is_climbing_jump: return
         # Check for buffered inputs and handle them
-        if input_buffer.get_and_remove_input(pygame.K_SPACE) or input_buffer.get_and_remove_input(pygame.K_UP) or input_buffer.get_and_remove_input(pygame.K_w):
+        if input_buffer.get_and_remove_input(pygame.K_SPACE) or \
+           input_buffer.get_and_remove_input(pygame.K_UP) or \
+           input_buffer.get_and_remove_input(pygame.K_w) or \
+           input_buffer.get_and_remove_input(VOICE_COMMAND_JUMP): 
             self.movement_state.jump() # Jump action
         if input_buffer.get_and_remove_input(pygame.K_LSHIFT) or input_buffer.get_and_remove_input(pygame.K_RSHIFT):
             self.movement_state.dash() # Dash action

@@ -29,7 +29,10 @@ def player_input(game_instance):
     """Process player input for the current game state."""
     match game_instance.current_state:
         case GameState.PLAYING:  # Use Enum member
-            game_instance.level_manager.level.player.process_input(game_instance.input_buffer)  # Assuming player has process_input method
+            # Voice jump is now handled by Player.process_input via VOICE_COMMAND_JUMP in buffer
+            # Process buffered keyboard/controller/voice inputs via Player class
+            if game_instance.level_manager and game_instance.level_manager.level and game_instance.level_manager.level.player:
+                game_instance.level_manager.level.player.process_input(game_instance.input_buffer)
         case _:
             pass  # No player input to process in other states
 
