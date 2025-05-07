@@ -51,7 +51,7 @@ class VoiceRecognizer:
 
         while self.is_listening:
             try:
-                data = self.audio_queue.get(timeout=0.5) # Wait for data with a timeout
+                data = self.audio_queue.get(timeout=0.05) # Wait for data with a reduced timeout
                 if self.recognizer.AcceptWaveform(data):
                     result = json.loads(self.recognizer.Result())
                     command = result.get('text', '').lower()
