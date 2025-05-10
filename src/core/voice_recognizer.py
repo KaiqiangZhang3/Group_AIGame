@@ -37,39 +37,40 @@ class VoiceRecognizer:
             self.model = None # Ensure model is None if loading failed
 
     def _process_audio(self):
-        """Internal method to process audio from the queue and perform recognition."""
         if not self.model:
             print("Vosk model not loaded. Cannot process audio.")
-            self.is_listening = False # Stop if model isn't loaded
+            self.is_listening = False
             return
 
-        # Create recognizer here, as it's specific to the thread and stream properties
-        # Use a grammar if you want to restrict vocabulary, e.g., ["jump", "[unk]"] for only jump
-        # For now, we'll allow free-form and check for 'jump' in the result.
         self.recognizer = vosk.KaldiRecognizer(self.model, VOSK_SAMPLE_RATE)
         print("Vosk recognizer created. Listening for 'jump'...")
 
+        detected_jump_in_current_segment = False
+
         while self.is_listening:
             try:
-                data = self.audio_queue.get(timeout=0.05) # Wait for data with a reduced timeout
+                data = self.audio_queue.get(timeout=0.05)
+                
                 if self.recognizer.AcceptWaveform(data):
+                    detected_jump_in_current_segment = False
                     result = json.loads(self.recognizer.Result())
                     command = result.get('text', '').lower()
-                    # print(f"Vosk recognized: {command}") # For debugging
-                    if "jump" in command:
-                        print("Vosk: JUMP detected! Adding to input buffer.")
+                    print(f"Final recognized: {command}") 
+
+                else:
+                    partial_result = json.loads(self.recognizer.PartialResult())
+                    partial_command = partial_result.get('partial', '').lower()
+
+                    if "jump" in partial_command and not detected_jump_in_current_segment:
+                        print("Vosk (partial): JUMP detected! Adding to input buffer.")
                         self.input_buffer.add_input(VOICE_COMMAND_JUMP)
-                # else:
-                    # Partial result can be accessed via self.recognizer.PartialResult()
-                    # print(f"Partial: {json.loads(self.recognizer.PartialResult()).get('partial', '')}")
+                        detected_jump_in_current_segment = True
+
             except queue.Empty:
-                continue # No data, loop again
+                continue
             except Exception as e:
                 print(f"Error in Vosk audio processing: {e}")
-                # Potentially stop listening or try to recover
-                # For now, we'll just log and continue
-                time.sleep(0.1) # Avoid tight loop on repeated errors
-        print("Vosk audio processing thread stopped.")
+                time.sleep(0.1)
 
     def _audio_callback(self, indata, frames, time, status):
         """This is called (from a separate thread) for each audio block."""
@@ -103,7 +104,8 @@ class VoiceRecognizer:
                 channels=VOSK_CHANNELS,
                 dtype='int16', # Vosk expects 16-bit PCM
                 device=device_id_to_use, 
-                callback=self._audio_callback
+                callback=self._audio_callback,
+                blocksize=400,
             )
             self.stream.start()
             print(f"Sounddevice stream started on device ID {device_id_to_use} with samplerate {VOSK_SAMPLE_RATE}.")
