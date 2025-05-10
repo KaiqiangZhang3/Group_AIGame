@@ -1,1 +1,5 @@
 pygame>=2.0
+# SpeechRecognition # Replaced by vosk
+# PyAudio # Replaced by sounddevice
+vosk
+sounddevice

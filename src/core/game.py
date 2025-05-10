@@ -4,6 +4,7 @@ from src.ui.menu import Menu
 from src.levels.level_manager import LevelManager
 from src.core.util import events_handler, draw_frame, player_input
 from src.core.input_buffer import InputBuffer
+from src.core.voice_recognizer import VoiceRecognizer
 
 class Game:
     """Main game class managing states, levels, and menus."""
@@ -22,13 +23,27 @@ class Game:
         self.menu = Menu(self)
         self.level_manager = LevelManager(self) # Pass self to LevelManager
 
+        # Voice recognition setup (using new VoiceRecognizer)
+        self.voice_recognizer = VoiceRecognizer(input_buffer=self.input_buffer) # Pass input_buffer
+        # Start listening only if the model was loaded successfully
+        if self.voice_recognizer.model:
+            self.voice_recognizer.start_listening()
+        else:
+            print("Game: Vosk model not loaded, voice commands disabled.")
+
     def run(self):
-        while True:
-            # --- Event Handling ---
-            events_handler(pygame.event.get(), self)
-            player_input(self) # Process player input based on the current state
-            draw_frame(self) # Draw the current frame based on state
-            self.input_buffer.clear_expired_inputs() # Clear expired inputs from the buffer
-            # --- Final Update --- 
-            pygame.display.flip() # Update the full display surface once per frame
-            self.clock.tick(FPS)
+        try:
+            while True:
+                # --- Event Handling ---
+                events_handler(pygame.event.get(), self)
+                player_input(self) # Process player input based on the current state
+                draw_frame(self) # Draw the current frame based on state
+                self.input_buffer.clear_expired_inputs() # Clear expired inputs from the buffer
+                # --- Final Update --- 
+                pygame.display.flip() # Update the full display surface once per frame
+                self.clock.tick(FPS)
+        finally:
+            # Ensure voice recognizer is stopped cleanly when game exits
+            if hasattr(self, 'voice_recognizer') and self.voice_recognizer:
+                print("Game: Stopping voice recognizer on exit...")
+                self.voice_recognizer.stop_listening()

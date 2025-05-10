@@ -1,4 +1,5 @@
 from enum import Enum, auto
+import os
 
 GAME_NAME = "I Wanna Study Computer Science"
 
@@ -55,3 +56,26 @@ FPS = 60
 MENU_FONT_SIZE = 50
 MENU_FONT_COLOR = WHITE
 MENU_FONT_HIGHLIGHT_COLOR = RED
+
+# --- Calculate Project Root based on settings.py location ---
+# Path to the directory containing settings.py (src/)
+_SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
+# Path to the project root (one level up from _SETTINGS_DIR)
+_PROJECT_ROOT = os.path.dirname(_SETTINGS_DIR)
+# ------------------------------------------------------------
+
+# Voice Command Constants for Input Buffer
+VOICE_COMMAND_JUMP = "VOICE_JUMP"
+
+# Voice Recognition (Vosk) Settings
+# IMPORTANT: Download a Vosk model (e.g., vosk-model-small-en-us-0.15)
+# from https://alphacephei.com/vosk/models, unzip it, and update this path.
+# Example: If unzipped to project root -> "vosk-model-small-en-us-0.15"
+_VOSK_MODEL_FOLDER_NAME = "vosk-model-small-en-us-0.15"
+VOSK_MODEL_PATH = os.path.join(_PROJECT_ROOT, _VOSK_MODEL_FOLDER_NAME)
+
+VOSK_SAMPLE_RATE = 16000  # Common sample rate for Vosk models
+VOSK_CHANNELS = 1         # Mono audio
+# Optional: Specify microphone device ID if the default is not correct.
+# Run voice_recognizer.py directly (once model path is set) to see available devices if needed.
+VOSK_DEVICE_ID = None     # None for default device, or an integer device ID
