@@ -10,31 +10,52 @@ class Menu:
 
         self.font = pygame.font.Font(None, MENU_FONT_SIZE)
 
-        self.options = ["Start Game", "Exit"]
         self.selected_option = 0
         self.option_rects = []
 
+        self._update_options_list() 
         self._setup_options()
+
+    def _update_options_list(self):
+        """Updates the list of menu options, including the dynamic voice toggle text."""
+        voice_status = "ON" if self.game.voice_recognition_enabled else "OFF"
+        self.options = [
+            "Start Game",
+            f"Voice Recognition: {voice_status}",
+            "Exit"
+        ]
 
     def _setup_options(self):
         """Calculates the positions for menu options."""
         self.option_rects = []
-        total_height = len(self.options) * (MENU_FONT_SIZE + 20)
-        start_y = (SCREEN_HEIGHT - total_height) // 2
+        total_height = 0
+        temp_surfs = []
+        for option_text in self.options:
+            surf = self.font.render(option_text, True, WHITE) 
+            temp_surfs.append(surf)
+            total_height += surf.get_height() + 15 
+        total_height -= 15 
 
-        for i, option in enumerate(self.options):
-            text_surf = self.font.render(option, True, WHITE)
-            text_rect = text_surf.get_rect(center=(SCREEN_WIDTH / 2, start_y + i * (MENU_FONT_SIZE + 20)))
+        start_y = (SCREEN_HEIGHT - total_height) // 2
+        current_y = start_y
+
+        for i, option_text in enumerate(self.options):
+            text_surf = temp_surfs[i] 
+            text_rect = text_surf.get_rect(center=(SCREEN_WIDTH / 2, current_y + text_surf.get_height() / 2))
             self.option_rects.append(text_rect)
+            current_y += text_surf.get_height() + 15 
 
     def draw(self):
         """Draws the menu options on the screen."""
         self.display_surface.fill(BLACK)
-
-        for i, option in enumerate(self.options):
+        self._update_options_list() 
+        for i, option_text in enumerate(self.options):
             color = RED if i == self.selected_option else WHITE
-            text_surf = self.font.render(option, True, color)
-            text_rect = self.option_rects[i]
+            text_surf = self.font.render(option_text, True, color)
+            if i < len(self.option_rects):
+                text_rect = self.option_rects[i]
+            else:
+                text_rect = text_surf.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + i * 60))
             self.display_surface.blit(text_surf, text_rect)
 
     def draw_menu(self):
@@ -71,11 +92,17 @@ class Menu:
                 self.selected_option = (self.selected_option + 1) % len(self.options)
             elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
                 self.select_option()
-            elif event.key == pygame.K_r: # Respawn
+            elif event.key == pygame.K_v: 
+                for i, option_text in enumerate(self.options):
+                    if "Voice Recognition" in option_text:
+                        self.selected_option = i
+                        self.select_option()
+                        break
+            elif event.key == pygame.K_r: 
                 if self.game.level_manager.level:
                     self.game.level_manager.level.reset_player_to_respawn()
-            elif event.key == pygame.K_m: # Return to Menu
-                self.return_to_menu() # Handles level cleanup and state change
+            elif event.key == pygame.K_m: 
+                self.return_to_menu() 
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1: 
@@ -95,11 +122,28 @@ class Menu:
 
     def select_option(self):
         """Executes the action for the selected menu option."""
+        self._update_options_list() 
         selected_text = self.options[self.selected_option]
         print(f"Menu option selected: {selected_text}")
 
         if selected_text == "Start Game":
-            self.game.level_manager.game_entry() # Load the first level
+            self.game.level_manager.game_entry() 
+            if self.game.voice_recognition_enabled and self.game.voice_recognizer.model:
+                self.game.try_start_voice_recognition()
+        elif "Voice Recognition" in selected_text:
+            self.game.voice_recognition_enabled = not self.game.voice_recognition_enabled
+            if self.game.voice_recognition_enabled:
+                if self.game.voice_recognizer.model:
+                    print("Menu: Enabling and starting voice recognition.")
+                    self.game.try_start_voice_recognition()
+                else:
+                    print("Menu: Cannot enable voice recognition, Vosk model not loaded.")
+                    self.game.voice_recognition_enabled = False 
+            else:
+                print("Menu: Disabling and stopping voice recognition.")
+                self.game.try_stop_voice_recognition()
+            self._update_options_list() 
+            self._setup_options()     
         elif selected_text == "Exit":
             pygame.quit()
             sys.exit()
@@ -108,8 +152,7 @@ class Menu:
         """Return to the main menu."""
         print("Returning to menu...")
         if self.game.level_manager.level:
-             self.game.level_manager.level.reset_checkpoints() # Reset checkpoints before leaving
-             self.game.level_manager.level = None # Unload the level
-        self.game.level_manager.current_level_index = 0 # Reset level index? Optional.
-        self.game.current_state = GameState.MENU # Use Enum member
-
+             self.game.level_manager.level.reset_checkpoints() 
+             self.game.level_manager.level = None 
+        self.game.level_manager.current_level_index = 0 
+        self.game.current_state = GameState.MENU 

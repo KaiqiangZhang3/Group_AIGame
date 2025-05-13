@@ -4,7 +4,10 @@ import threading
 import json
 import queue
 import time # Added for sleep on error
-from src.settings import VOSK_MODEL_PATH, VOSK_SAMPLE_RATE, VOSK_CHANNELS, VOSK_DEVICE_ID, VOICE_COMMAND_JUMP
+from src.settings import (
+    VOSK_MODEL_PATH, VOSK_SAMPLE_RATE, VOSK_CHANNELS, VOSK_DEVICE_ID,
+    VOICE_COMMAND_JUMP, VOICE_COMMAND_DASH, VOICE_COMMAND_LEFT, VOICE_COMMAND_RIGHT
+)
 
 class VoiceRecognizer:
     """Handles offline voice recognition using Vosk."""
@@ -21,7 +24,7 @@ class VoiceRecognizer:
         self.model = None
         self.recognizer = None
         self.stream = None
-        self.is_listening = False
+        self._listening_flag = False
         self.thread = None
         self.audio_queue = queue.Queue()
 
@@ -39,32 +42,53 @@ class VoiceRecognizer:
     def _process_audio(self):
         if not self.model:
             print("Vosk model not loaded. Cannot process audio.")
-            self.is_listening = False
+            self._listening_flag = False
             return
 
-        self.recognizer = vosk.KaldiRecognizer(self.model, VOSK_SAMPLE_RATE)
-        print("Vosk recognizer created. Listening for 'jump'...")
+        # Define keywords to help Vosk focus
+        keywords = ["jump", "dash", "left", "right"]
+        # Convert list to JSON string format expected by Vosk
+        grammar = json.dumps(keywords)
 
-        detected_jump_in_current_segment = False
+        self.recognizer = vosk.KaldiRecognizer(self.model, VOSK_SAMPLE_RATE, grammar)
+        print(f"Vosk recognizer created. Listening for: {', '.join(keywords)}...")
 
-        while self.is_listening:
+        command_processed_this_segment = False
+
+        while self._listening_flag:
             try:
                 data = self.audio_queue.get(timeout=0.05)
                 
                 if self.recognizer.AcceptWaveform(data):
-                    detected_jump_in_current_segment = False
+                    command_processed_this_segment = False # Reset for new final result
                     result = json.loads(self.recognizer.Result())
                     command = result.get('text', '').lower()
+                    # Process final result if needed, though partials are usually faster for actions
                     print(f"Final recognized: {command}") 
+                    # Potentially re-evaluate command here if partial matching is not robust enough
+                    # For now, we rely on partials for responsiveness.
 
                 else:
                     partial_result = json.loads(self.recognizer.PartialResult())
                     partial_command = partial_result.get('partial', '').lower()
 
-                    if "jump" in partial_command and not detected_jump_in_current_segment:
-                        print("Vosk (partial): JUMP detected! Adding to input buffer.")
-                        self.input_buffer.add_input(VOICE_COMMAND_JUMP)
-                        detected_jump_in_current_segment = True
+                    if not command_processed_this_segment:
+                        if "jump" in partial_command:
+                            print("Vosk (partial): JUMP detected! Adding to input buffer.")
+                            self.input_buffer.add_input(VOICE_COMMAND_JUMP)
+                            command_processed_this_segment = True
+                        elif "dash" in partial_command:
+                            print("Vosk (partial): DASH detected! Adding to input buffer.")
+                            self.input_buffer.add_input(VOICE_COMMAND_DASH)
+                            command_processed_this_segment = True
+                        elif "right" in partial_command:
+                            print("Vosk (partial): RIGHT detected! Adding to input buffer.")
+                            self.input_buffer.add_input(VOICE_COMMAND_RIGHT)
+                            command_processed_this_segment = True
+                        elif "left" in partial_command:
+                            print("Vosk (partial): LEFT detected! Adding to input buffer.")
+                            self.input_buffer.add_input(VOICE_COMMAND_LEFT)
+                            command_processed_this_segment = True
 
             except queue.Empty:
                 continue
@@ -83,11 +107,11 @@ class VoiceRecognizer:
         if not self.model: # Don't start if model failed to load
             print("Cannot start listening: Vosk model not loaded.")
             return
-        if self.is_listening:
+        if self.is_listening():
             print("Already listening.")
             return
 
-        self.is_listening = True
+        self._listening_flag = True
         try:
             # Query devices if VOSK_DEVICE_ID is None to help user choose
             if VOSK_DEVICE_ID is None:
@@ -111,7 +135,7 @@ class VoiceRecognizer:
             print(f"Sounddevice stream started on device ID {device_id_to_use} with samplerate {VOSK_SAMPLE_RATE}.")
         except Exception as e:
             print(f"Error starting sounddevice stream: {e}")
-            self.is_listening = False
+            self._listening_flag = False
             return
 
         self.thread = threading.Thread(target=self._process_audio, daemon=True)
@@ -120,12 +144,12 @@ class VoiceRecognizer:
 
     def stop_listening(self):
         """Stops listening for voice commands."""
-        if not self.is_listening:
+        if not self.is_listening():
             # print("Not currently listening.")
             return
         
         print("Stopping voice recognizer...")
-        self.is_listening = False # Signal the processing thread to stop
+        self._listening_flag = False # Signal the processing thread to stop
 
         if self.stream:
             try:
@@ -148,6 +172,10 @@ class VoiceRecognizer:
             except queue.Empty:
                 break
         print("Voice recognizer stopped.")
+
+    def is_listening(self):
+        """Returns True if the recognizer is actively listening, False otherwise."""
+        return self._listening_flag and self.thread is not None and self.thread.is_alive()
 
 # Example Usage (for testing this module directly, not part of the game integration)
 if __name__ == '__main__':
@@ -180,7 +208,7 @@ if __name__ == '__main__':
         recognizer = VoiceRecognizer(input_buffer=test_input_buffer, model_path=VOSK_MODEL_PATH)
         if recognizer.model: # Only start if model loaded
             recognizer.start_listening()
-            print("Say 'jump'. Listening for 10 seconds...")
+            print("Say 'jump', 'dash', 'left', or 'right'. Listening for 10 seconds...")
             try:
                 time.sleep(10) # Listen for 10 seconds
             except KeyboardInterrupt:

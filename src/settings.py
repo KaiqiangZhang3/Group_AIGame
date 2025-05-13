@@ -66,6 +66,9 @@ _PROJECT_ROOT = os.path.dirname(_SETTINGS_DIR)
 
 # Voice Command Constants for Input Buffer
 VOICE_COMMAND_JUMP = "VOICE_JUMP"
+VOICE_COMMAND_DASH = "VOICE_DASH"
+VOICE_COMMAND_RIGHT = "VOICE_RIGHT"
+VOICE_COMMAND_LEFT = "VOICE_LEFT"
 
 # Voice Recognition (Vosk) Settings
 # IMPORTANT: Download a Vosk model (e.g., vosk-model-small-en-us-0.15)
@@ -79,3 +82,6 @@ VOSK_CHANNELS = 1         # Mono audio
 # Optional: Specify microphone device ID if the default is not correct.
 # Run voice_recognizer.py directly (once model path is set) to see available devices if needed.
 VOSK_DEVICE_ID = None     # None for default device, or an integer device ID
+
+# Voice Recognition Toggle Setting
+VOICE_RECOGNITION_ENABLED_BY_DEFAULT = True

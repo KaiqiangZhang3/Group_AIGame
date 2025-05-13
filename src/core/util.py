@@ -40,7 +40,7 @@ def draw_frame(game_instance):
     """Draw a single frame of the game."""
     match game_instance.current_state:
         case GameState.MENU: # Use Enum member
-            game_instance.menu.draw_menu() # Placeholder call
+            game_instance.menu.draw() # Use the interactive draw method
         case GameState.PLAYING: # Use Enum member
             if game_instance.level_manager.level:
                 game_instance.level_manager.level.run() # Update logic AND draw level content here
