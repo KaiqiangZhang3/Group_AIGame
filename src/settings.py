@@ -52,11 +52,6 @@ MOVING_SPIKE_HORIZONTAL_RANGE = 3 # Number of tiles the spike moves left/right f
 # Framerate
 FPS = 60
 
-# Fonts (Consider using a specific font file later)
-MENU_FONT_SIZE = 50
-MENU_FONT_COLOR = WHITE
-MENU_FONT_HIGHLIGHT_COLOR = RED
-
 # --- Calculate Project Root based on settings.py location ---
 # Path to the directory containing settings.py (src/)
 _SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -64,11 +59,40 @@ _SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.dirname(_SETTINGS_DIR)
 # ------------------------------------------------------------
 
+# --- Asset Paths (NEW) ---
+ASSETS_DIR = os.path.join(_PROJECT_ROOT, "assets")
+FONTS_DIR = os.path.join(ASSETS_DIR, "fonts")
+# Example: ELEGANT_FONT_NAME = "Quicksand-Regular.ttf" # Replace with your font file
+ELEGANT_FONT_NAME = None # Set to a font file name like "YourFont.ttf"
+ELEGANT_FONT_PATH = os.path.join(FONTS_DIR, ELEGANT_FONT_NAME) if ELEGANT_FONT_NAME else None
+# --------------------------
+
+# Fonts (Consider using a specific font file later)
+MENU_FONT_SIZE = 50
+MENU_FONT_COLOR = WHITE
+MENU_FONT_HIGHLIGHT_COLOR = RED # Kept for old menu style if needed, or for other UI
+
+# --- New Minimalist Menu Settings (NEW) ---
+ELEGANT_FONT_SIZE = 48
+MINIMAL_MENU_BACKGROUND_COLOR = (30, 30, 40)   # Dark cool grey/blue
+MINIMAL_MENU_TEXT_COLOR = (220, 220, 230) # Light grey/lavender
+MINIMAL_MENU_HIGHLIGHT_COLOR = (255, 255, 255) # Bright white for selected
+MINIMAL_MENU_GLOW_COLOR = (180, 180, 220, 100) # Semi-transparent lavender for glow (R,G,B,Alpha)
+
+# --- New Atmospheric Background Settings (NEW) ---
+GRADIENT_TOP_COLOR = (20, 20, 60)   # Deep blue
+GRADIENT_BOTTOM_COLOR = (60, 20, 80)  # Dark purple
+FIREFLY_COLOR = (255, 255, 150)      # Soft yellow for fireflies
+FIREFLY_GLOW_COLOR = (200, 200, 100, 70) # Glow for fireflies (R,G,B,Alpha)
+
+# --- Parallax Scrolling Settings (NEW) ---
+BACKGROUND_GLOBAL_DRIFT_X = 0.05 # Very slow global horizontal drift speed
+MIST_PARALLAX_FACTOR = 0.3       # Mist moves at 30% of global drift
+FIREFLY_PARALLAX_FACTOR = 0.7    # Fireflies move at 70% of global drift
+# -----------------------------------------
+
 # Voice Command Constants for Input Buffer
 VOICE_COMMAND_JUMP = "VOICE_JUMP"
-VOICE_COMMAND_DASH = "VOICE_DASH"
-VOICE_COMMAND_RIGHT = "VOICE_RIGHT"
-VOICE_COMMAND_LEFT = "VOICE_LEFT"
 
 # Voice Recognition (Vosk) Settings
 # IMPORTANT: Download a Vosk model (e.g., vosk-model-small-en-us-0.15)

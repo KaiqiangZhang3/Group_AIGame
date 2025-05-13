@@ -4,10 +4,7 @@ import threading
 import json
 import queue
 import time # Added for sleep on error
-from src.settings import (
-    VOSK_MODEL_PATH, VOSK_SAMPLE_RATE, VOSK_CHANNELS, VOSK_DEVICE_ID,
-    VOICE_COMMAND_JUMP, VOICE_COMMAND_DASH, VOICE_COMMAND_LEFT, VOICE_COMMAND_RIGHT
-)
+from src.settings import VOSK_MODEL_PATH, VOSK_SAMPLE_RATE, VOSK_CHANNELS, VOSK_DEVICE_ID, VOICE_COMMAND_JUMP
 
 class VoiceRecognizer:
     """Handles offline voice recognition using Vosk."""
@@ -45,50 +42,29 @@ class VoiceRecognizer:
             self._listening_flag = False
             return
 
-        # Define keywords to help Vosk focus
-        keywords = ["jump", "dash", "left", "right"]
-        # Convert list to JSON string format expected by Vosk
-        grammar = json.dumps(keywords)
+        self.recognizer = vosk.KaldiRecognizer(self.model, VOSK_SAMPLE_RATE)
+        print("Vosk recognizer created. Listening for 'jump'...")
 
-        self.recognizer = vosk.KaldiRecognizer(self.model, VOSK_SAMPLE_RATE, grammar)
-        print(f"Vosk recognizer created. Listening for: {', '.join(keywords)}...")
-
-        command_processed_this_segment = False
+        detected_jump_in_current_segment = False
 
         while self._listening_flag:
             try:
                 data = self.audio_queue.get(timeout=0.05)
                 
                 if self.recognizer.AcceptWaveform(data):
-                    command_processed_this_segment = False # Reset for new final result
+                    detected_jump_in_current_segment = False
                     result = json.loads(self.recognizer.Result())
                     command = result.get('text', '').lower()
-                    # Process final result if needed, though partials are usually faster for actions
                     print(f"Final recognized: {command}") 
-                    # Potentially re-evaluate command here if partial matching is not robust enough
-                    # For now, we rely on partials for responsiveness.
 
                 else:
                     partial_result = json.loads(self.recognizer.PartialResult())
                     partial_command = partial_result.get('partial', '').lower()
 
-                    if not command_processed_this_segment:
-                        if "jump" in partial_command:
-                            print("Vosk (partial): JUMP detected! Adding to input buffer.")
-                            self.input_buffer.add_input(VOICE_COMMAND_JUMP)
-                            command_processed_this_segment = True
-                        elif "dash" in partial_command:
-                            print("Vosk (partial): DASH detected! Adding to input buffer.")
-                            self.input_buffer.add_input(VOICE_COMMAND_DASH)
-                            command_processed_this_segment = True
-                        elif "right" in partial_command:
-                            print("Vosk (partial): RIGHT detected! Adding to input buffer.")
-                            self.input_buffer.add_input(VOICE_COMMAND_RIGHT)
-                            command_processed_this_segment = True
-                        elif "left" in partial_command:
-                            print("Vosk (partial): LEFT detected! Adding to input buffer.")
-                            self.input_buffer.add_input(VOICE_COMMAND_LEFT)
-                            command_processed_this_segment = True
+                    if "jump" in partial_command and not detected_jump_in_current_segment:
+                        print("Vosk (partial): JUMP detected! Adding to input buffer.")
+                        self.input_buffer.add_input(VOICE_COMMAND_JUMP)
+                        detected_jump_in_current_segment = True
 
             except queue.Empty:
                 continue
@@ -208,7 +184,7 @@ if __name__ == '__main__':
         recognizer = VoiceRecognizer(input_buffer=test_input_buffer, model_path=VOSK_MODEL_PATH)
         if recognizer.model: # Only start if model loaded
             recognizer.start_listening()
-            print("Say 'jump', 'dash', 'left', or 'right'. Listening for 10 seconds...")
+            print("Say 'jump'. Listening for 10 seconds...")
             try:
                 time.sleep(10) # Listen for 10 seconds
             except KeyboardInterrupt:

@@ -1,7 +1,7 @@
 import pygame
 from src.settings import *
 from src.player.movement_state import MovementState
-from src.settings import VOICE_COMMAND_JUMP, VOICE_COMMAND_DASH, VOICE_COMMAND_LEFT, VOICE_COMMAND_RIGHT
+from src.settings import VOICE_COMMAND_JUMP
 
 class Player(pygame.sprite.Sprite):
     """Represents the player character."""
@@ -33,21 +33,8 @@ class Player(pygame.sprite.Sprite):
            input_buffer.get_and_remove_input(pygame.K_w) or \
            input_buffer.get_and_remove_input(VOICE_COMMAND_JUMP): 
             self.movement_state.jump() # Jump action
-        
-        if input_buffer.get_and_remove_input(pygame.K_LSHIFT) or \
-           input_buffer.get_and_remove_input(pygame.K_RSHIFT) or \
-           input_buffer.get_and_remove_input(VOICE_COMMAND_DASH):
+        if input_buffer.get_and_remove_input(pygame.K_LSHIFT) or input_buffer.get_and_remove_input(pygame.K_RSHIFT):
             self.movement_state.dash() # Dash action
-
-        # Voice commands for movement (these will trigger one step of movement)
-        # For continuous movement, the player would need to keep saying "left" or "right",
-        # or we'd need a more complex state management (e.g., "start moving left", "stop moving").
-        # For now, a single command maps to a single invocation of move_left/right.
-        if input_buffer.get_and_remove_input(VOICE_COMMAND_LEFT):
-            self.movement_state.move_left()
-        
-        if input_buffer.get_and_remove_input(VOICE_COMMAND_RIGHT):
-            self.movement_state.move_right()
 
     def continually_input(self):
         """Handle player input for movement, jumping, and dashing."""
