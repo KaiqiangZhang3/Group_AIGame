@@ -20,16 +20,45 @@ class Game:
 
         self.input_buffer = InputBuffer() # Initialize input buffer
         self.current_state = GameState.MENU # Start in the menu
+
+        # Initialize voice recognition enabled flag before Menu instantiation
+        self.voice_recognition_enabled = VOICE_RECOGNITION_ENABLED_BY_DEFAULT
+
         self.menu = Menu(self)
         self.level_manager = LevelManager(self) # Pass self to LevelManager
 
-        # Voice recognition setup (using new VoiceRecognizer)
-        self.voice_recognizer = VoiceRecognizer(input_buffer=self.input_buffer) # Pass input_buffer
-        # Start listening only if the model was loaded successfully
+        # Voice recognition setup
+        self.voice_recognizer = VoiceRecognizer(input_buffer=self.input_buffer)
         if self.voice_recognizer.model:
-            self.voice_recognizer.start_listening()
+            if self.voice_recognition_enabled:
+                print("Game: Vosk model loaded, voice recognition enabled and starting.")
+                self.voice_recognizer.start_listening()
+            else:
+                print("Game: Vosk model loaded, but voice recognition is disabled by default.")
         else:
-            print("Game: Vosk model not loaded, voice commands disabled.")
+            print("Game: Vosk model not loaded, voice commands will be disabled regardless of toggle.")
+            self.voice_recognition_enabled = False # Force disable if model isn't there
+
+    def try_start_voice_recognition(self):
+        """Starts voice recognition if enabled, model loaded, and not already listening."""
+        if self.voice_recognition_enabled and self.voice_recognizer and self.voice_recognizer.model:
+            if not self.voice_recognizer.is_listening():
+                print("Game: Starting voice recognition...")
+                self.voice_recognizer.start_listening()
+            else:
+                print("Game: Voice recognition already active.")
+        elif not self.voice_recognizer.model:
+            print("Game: Cannot start voice recognition, Vosk model not loaded.")
+        else:
+            print("Game: Voice recognition is disabled by toggle.")
+
+    def try_stop_voice_recognition(self):
+        """Stops voice recognition if it's currently active."""
+        if self.voice_recognizer and self.voice_recognizer.is_listening():
+            print("Game: Stopping voice recognition...")
+            self.voice_recognizer.stop_listening()
+        else:
+            print("Game: Voice recognition is not currently active or recognizer not initialized.")
 
     def run(self):
         try:

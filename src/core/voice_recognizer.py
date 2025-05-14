@@ -21,7 +21,7 @@ class VoiceRecognizer:
         self.model = None
         self.recognizer = None
         self.stream = None
-        self.is_listening = False
+        self._listening_flag = False
         self.thread = None
         self.audio_queue = queue.Queue()
 
@@ -39,7 +39,7 @@ class VoiceRecognizer:
     def _process_audio(self):
         if not self.model:
             print("Vosk model not loaded. Cannot process audio.")
-            self.is_listening = False
+            self._listening_flag = False
             return
 
         self.recognizer = vosk.KaldiRecognizer(self.model, VOSK_SAMPLE_RATE)
@@ -47,7 +47,7 @@ class VoiceRecognizer:
 
         detected_jump_in_current_segment = False
 
-        while self.is_listening:
+        while self._listening_flag:
             try:
                 data = self.audio_queue.get(timeout=0.05)
                 
@@ -83,11 +83,11 @@ class VoiceRecognizer:
         if not self.model: # Don't start if model failed to load
             print("Cannot start listening: Vosk model not loaded.")
             return
-        if self.is_listening:
+        if self.is_listening():
             print("Already listening.")
             return
 
-        self.is_listening = True
+        self._listening_flag = True
         try:
             # Query devices if VOSK_DEVICE_ID is None to help user choose
             if VOSK_DEVICE_ID is None:
@@ -111,7 +111,7 @@ class VoiceRecognizer:
             print(f"Sounddevice stream started on device ID {device_id_to_use} with samplerate {VOSK_SAMPLE_RATE}.")
         except Exception as e:
             print(f"Error starting sounddevice stream: {e}")
-            self.is_listening = False
+            self._listening_flag = False
             return
 
         self.thread = threading.Thread(target=self._process_audio, daemon=True)
@@ -120,12 +120,12 @@ class VoiceRecognizer:
 
     def stop_listening(self):
         """Stops listening for voice commands."""
-        if not self.is_listening:
+        if not self.is_listening():
             # print("Not currently listening.")
             return
         
         print("Stopping voice recognizer...")
-        self.is_listening = False # Signal the processing thread to stop
+        self._listening_flag = False # Signal the processing thread to stop
 
         if self.stream:
             try:
@@ -148,6 +148,10 @@ class VoiceRecognizer:
             except queue.Empty:
                 break
         print("Voice recognizer stopped.")
+
+    def is_listening(self):
+        """Returns True if the recognizer is actively listening, False otherwise."""
+        return self._listening_flag and self.thread is not None and self.thread.is_alive()
 
 # Example Usage (for testing this module directly, not part of the game integration)
 if __name__ == '__main__':
