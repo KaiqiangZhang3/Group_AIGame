@@ -19,3 +19,4 @@ if __name__ == "__main__":
         print(f"An error occurred: {e}")
         pygame.quit()
         sys.exit()
+ 
