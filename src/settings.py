@@ -1,7 +1,7 @@
 from enum import Enum, auto
 import os
 
-GAME_NAME = "I Wanna Study Computer Science"
+GAME_NAME = "Illumination"
 
 # Screen dimensions
 SCREEN_WIDTH = 1024
@@ -126,6 +126,27 @@ VOSK_DEVICE_ID = None     # None for default device, or an integer device ID
 
 # Voice Recognition Toggle Setting
 VOICE_RECOGNITION_ENABLED_BY_DEFAULT = True
+
+# --- Magical Level Background Effects (NEW) ---
+LEVEL_BG_GRADIENT_TOP = (40, 0, 60)      # Dark magenta/purple
+LEVEL_BG_GRADIENT_BOTTOM = (10, 10, 30)  # Deep dark blue
+LEVEL_BG_PARTICLE_COLORS = [
+    (255, 223, 186, 150), # Light gold, semi-transparent
+    (173, 216, 230, 120), # Light blue, semi-transparent
+    (221, 160, 221, 100)  # Plum/Orchid, semi-transparent
+]
+LEVEL_BG_PARTICLE_COUNT = 50
+LEVEL_BG_PARTICLE_SPEED_RANGE = (0.5, 1.5) # Pixels per second
+LEVEL_BG_PARTICLE_RADIUS_RANGE = (2, 5)
+LEVEL_BG_WISP_COLORS = [
+    (255, 255, 0, 50),    # Faint yellow
+    (138, 43, 226, 40)    # Faint blue-violet
+]
+LEVEL_BG_WISP_COUNT = 5
+LEVEL_BG_WISP_MAX_LENGTH = 150
+LEVEL_BG_WISP_MAX_WIDTH = 8
+LEVEL_BG_WISP_SPEED_RANGE = (20, 40) # Pixels per second for leading point
+# --------------------------------------------------
 
 # --- Full Level Illumination on Max Voice Light (NEW) ---
 FULL_ILLUMINATION_FADE_IN_SPEED = 120  # Alpha units per second to fade in

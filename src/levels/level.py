@@ -3,6 +3,7 @@ from src.settings import *
 from src.levels.tile import Tile
 from src.player.player import Player
 from src.entities.moving_spike import MovingSpike
+from src.fx.level_background import MagicalBackground
 
 class Level:
     """Manages the game level, including tiles, player, and interactions."""
@@ -175,10 +176,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.level_width = level_width
         self.level_height = level_height
 
-        # default background color and surface
-        self.default_bg_color = (0, 0, 0)
-        self.default_bg_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-        self.default_bg_surf.fill(self.default_bg_color)
+        # Magical Background (NEW)
+        self.magical_background = MagicalBackground()
 
         # Darkness overlay surface (cached)
         self.darkness_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
@@ -186,6 +185,9 @@ class YSortCameraGroup(pygame.sprite.Group):
 
     def update(self, dt): # Add dt parameter
         """Update all sprites in the group, passing dt if they accept it."""
+        # Update magical background (NEW)
+        self.magical_background.update(dt)
+
         for sprite in self.sprites():
             if hasattr(sprite, 'update'):
                 # Check if sprite's update method expects dt
@@ -199,9 +201,14 @@ class YSortCameraGroup(pygame.sprite.Group):
     def custom_draw(self, player, current_darkness_alpha): # Added current_darkness_alpha
         """Draw layers, centering the camera on the player, and apply darkness effect."""
         if not self.display_surface:
-            self.display_surface = pygame.display.get_surface()  # Try to get surface again
-        if not self.display_surface:
-            return  # Cannot draw
+            print("Warning: display_surface not available in YSortCameraGroup.custom_draw. Attempting to get it.")
+            self.display_surface = pygame.display.get_surface()
+            if not self.display_surface:
+                print("Error: Still couldn't get display_surface. Aborting draw.")
+                return
+
+        # Draw magical background (NEW)
+        self.magical_background.draw(self.display_surface)
 
         # Calculate camera offset based on player center
         self.offset.x = player.rect.centerx - self.half_width
@@ -212,17 +219,6 @@ class YSortCameraGroup(pygame.sprite.Group):
         max_y_offset = max(0, self.level_height - SCREEN_HEIGHT)
         self.offset.x = max(0, min(self.offset.x, max_x_offset))
         self.offset.y = max(0, min(self.offset.y, max_y_offset))
-
-        # --- Draw Default Background --- (This is the map's base color if needed)
-        self.display_surface.blit(self.default_bg_surf, (0, 0))
-
-        # --- Draw Map Background (Optional, can be part of sprites) ---
-        map_rect = pygame.Rect(-self.offset.x, -self.offset.y, self.level_width, self.level_height)
-        pygame.draw.rect(
-            self.display_surface,
-            (173, 216, 230),  # Light blue color for the map background
-            map_rect
-        )
 
         # Draw sprites sorted by Y (optional sort, depends on visuals)
         for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
