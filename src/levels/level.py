@@ -129,11 +129,12 @@ class Level:
         """Update and draw all sprites in the level."""
         if not self.player: return 
 
-        self.visible_sprites.custom_draw(self.player)
-
-        self.visible_sprites.update()
-
+        # --- Update game logic first ---
+        self.visible_sprites.update() # This calls player.update() and other sprite updates
         self.check_checkpoint_collisions()
+
+        # --- Then draw everything ---
+        self.visible_sprites.custom_draw(self.player) # Draw all visible sprites including background and player
 
 
 class YSortCameraGroup(pygame.sprite.Group):
@@ -153,8 +154,12 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.default_bg_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.default_bg_surf.fill(self.default_bg_color)
 
+        # Darkness overlay surface (cached)
+        self.darkness_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        self.darkness_surface.convert_alpha()
+
     def custom_draw(self, player):
-        """Draw layers, centering the camera on the player."""
+        """Draw layers, centering the camera on the player, and apply darkness effect."""
         if not self.display_surface:
             self.display_surface = pygame.display.get_surface()  # Try to get surface again
         if not self.display_surface:
@@ -170,10 +175,10 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.offset.x = max(0, min(self.offset.x, max_x_offset))
         self.offset.y = max(0, min(self.offset.y, max_y_offset))
 
-        # --- Draw Default Background ---
+        # --- Draw Default Background --- (This is the map's base color if needed)
         self.display_surface.blit(self.default_bg_surf, (0, 0))
 
-        # --- Draw Map Background ---
+        # --- Draw Map Background (Optional, can be part of sprites) ---
         map_rect = pygame.Rect(-self.offset.x, -self.offset.y, self.level_width, self.level_height)
         pygame.draw.rect(
             self.display_surface,
@@ -185,3 +190,22 @@ class YSortCameraGroup(pygame.sprite.Group):
         for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
             offset_pos = sprite.rect.topleft - self.offset  # Calculate position relative to camera
             self.display_surface.blit(sprite.image, offset_pos)  # Draw the sprite
+
+        # --- Player Light and Darkness Effects --- 
+        if player and hasattr(player, 'get_light_effects'):
+            mask_brush_surface, light_world_pos, pulsing_radius, light_surface_center_coords = player.get_light_effects()
+            
+            screen_light_pos = (light_world_pos[0] - self.offset.x,
+                                light_world_pos[1] - self.offset.y)
+
+            # 2. Prepare and apply darkness mask
+            #    Fill the darkness surface with fully opaque black
+            self.darkness_surface.fill(DARKNESS_COLOR) 
+
+            #    Blit the white mask_brush_surface onto the darkness_surface using BLEND_SUB.
+            #    This subtracts the brush's alpha from the darkness_surface's alpha,
+            #    effectively creating a soft-edged transparent hole.
+            self.darkness_surface.blit(mask_brush_surface, screen_light_pos, special_flags=pygame.BLEND_RGBA_SUB)
+            
+            #    Blit the resulting darkness_surface (black with a soft transparent hole) onto the main display
+            self.display_surface.blit(self.darkness_surface, (0,0))

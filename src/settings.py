@@ -17,7 +17,8 @@ GREEN = (0, 255, 0)      # Exit tiles
 # LIGHT_GREY = (100, 100, 100) # Removed - Was for fancier menu background
 SILVER = (192, 192, 192) # Traps
 EARTH_BROWN = (139, 69, 19) # Platforms
-LIGHT_PINK = (255, 182, 193) # Player
+PLAYER_COLOR = (255, 255, 0) # Player is now yellow
+PLAYER_GLOW_COLOR = (255, 255, 150) # Soft yellow glow (RGB only, Alpha will be dynamic)
 CHECKPOINT_YELLOW = (255, 255, 0) # Yellow for inactive checkpoints
 CHECKPOINT_ACTIVE_BLUE = (0, 0, 255) # Blue for active checkpoints
 SKY_BLUE = (135, 206, 235) # Added missing color
@@ -44,6 +45,13 @@ PLAYER_DASH_PREPARE_FRAMES = 5 # Frames before dash to prepare
 PLAYER_DASH_SPEED = 20   # Speed during dash
 PLAYER_DASH_DURATION = 13 # Duration of dash in frames
 PLAYER_DASH_COOLDOWN = 30  # Cooldown period for dash in frames
+PLAYER_LIGHT_BASE_RADIUS = 60 # Base radius of the player's light glow
+PLAYER_LIGHT_PULSE_AMPLITUDE = 15 # How much the radius changes from base
+PLAYER_LIGHT_PULSE_SPEED = 1.5    # Speed of the pulsing (higher is faster)
+PLAYER_LIGHT_MIN_ALPHA = 70       # Minimum alpha for the glow during pulse
+PLAYER_LIGHT_MAX_ALPHA = 170      # Maximum alpha for the glow during pulse
+DARKNESS_COLOR = (0, 0, 0, 255)     # RGBA for the darkness overlay (fully opaque black)
+PLAYER_MASK_BRUSH_COLOR = (255, 255, 255) # White color for the mask brush surface
 
 # Moving Spike Settings
 MOVING_SPIKE_SPEED = 2
