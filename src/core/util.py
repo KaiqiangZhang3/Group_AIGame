@@ -1,6 +1,6 @@
 import pygame
 import sys
-from src.settings import GameState
+from src.settings import GameState, INPUT_BUFFER_KEY_JUMP, INPUT_BUFFER_KEY_DASH
 
 def events_handler(events, game_instance):   
     for event in events:
@@ -21,7 +21,12 @@ def keyboard_handler(event, game_instance):
     """Handle keyboard input based on the current game state."""
     match game_instance.current_state:
         case GameState.PLAYING:  # Use Enum member
-            game_instance.input_buffer.add_input(event.key)  # Buffer the key press
+            if event.key == pygame.K_SPACE:
+                game_instance.input_buffer.add_input(INPUT_BUFFER_KEY_JUMP)
+            elif event.key == pygame.K_LSHIFT:
+                game_instance.input_buffer.add_input(INPUT_BUFFER_KEY_DASH)
+            # else: # Optional: Handle other key presses if needed for PLAYING state
+            #     game_instance.input_buffer.add_input(event.key) # Buffer other keys if player needs them
         case _:
             game_instance.menu.handle_input(event)  # Assuming Menu has handle_input
 
@@ -36,14 +41,14 @@ def player_input(game_instance):
         case _:
             pass  # No player input to process in other states
 
-def draw_frame(game_instance):
+def draw_frame(game_instance, dt):
     """Draw a single frame of the game."""
     match game_instance.current_state:
         case GameState.MENU: # Use Enum member
             game_instance.menu.draw() # Use the interactive draw method
         case GameState.PLAYING: # Use Enum member
             if game_instance.level_manager.level:
-                game_instance.level_manager.level.run() # Update logic AND draw level content here
+                game_instance.level_manager.level.run(dt) # Pass dt here
             else:
                 # Safety check: If in PLAYING state but no level, return to menu
                 print("Warning: PLAYING state with no level loaded. Returning to menu.")
