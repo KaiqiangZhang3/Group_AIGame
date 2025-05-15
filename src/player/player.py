@@ -3,10 +3,21 @@ from src.settings import *
 from src.player.movement_state import MovementState
 from src.settings import VOICE_COMMAND_JUMP
 import math # Import math for sine wave
+from ..core.input_buffer import InputBuffer
+from ..settings import (
+    PLAYER_COLOR, PLAYER_SPEED, PLAYER_JUMP_STRENGTH,
+    PLAYER_GRAVITY, PLAYER_DASH_SPEED,
+    PLAYER_DASH_DURATION, PLAYER_DASH_COOLDOWN, PLAYER_GLOW_COLOR, 
+    PLAYER_LIGHT_BASE_RADIUS, PLAYER_LIGHT_PULSE_AMPLITUDE, PLAYER_LIGHT_PULSE_SPEED,
+    PLAYER_LIGHT_MIN_ALPHA, PLAYER_LIGHT_MAX_ALPHA, PLAYER_MASK_BRUSH_COLOR,
+    VOICE_LIGHT_MAX_BONUS_RADIUS, VOICE_LIGHT_DECAY_RATE, 
+    VOICE_LIGHT_INCREASE_RATE, VOICE_SPEECH_COOLDOWN_DURATION, LONG_SILENCE_DURATION
+)
+
 
 class Player(pygame.sprite.Sprite):
     """Represents the player character."""
-    def __init__(self, pos, groups, obstacle_sprites, trap_sprites, exit_sprites, level_complete_callback, death_callback): 
+    def __init__(self, pos, groups, obstacle_sprites, trap_sprites, exit_sprites, level_complete_callback, death_callback, input_buffer: InputBuffer, level_instance): 
         super().__init__(groups)
         # Visual representation (Circle)
         diameter = TILE_SIZE - 8 # Diameter of the ball
@@ -27,11 +38,17 @@ class Player(pygame.sprite.Sprite):
 
         # Pulsing light effect
         self.pulse_timer = 0
-        # Max radius for the surface so it doesn't clip during pulse
-        max_pulse_radius = PLAYER_LIGHT_BASE_RADIUS + PLAYER_LIGHT_PULSE_AMPLITUDE
-        self.light_surface_size = (max_pulse_radius * 2, max_pulse_radius * 2)
-        self.light_surface_center = (max_pulse_radius, max_pulse_radius)
+        # Ensure light surface is large enough for base, pulse, and voice bonus
+        max_possible_radius = PLAYER_LIGHT_BASE_RADIUS + PLAYER_LIGHT_PULSE_AMPLITUDE + VOICE_LIGHT_MAX_BONUS_RADIUS
+        self.light_surface_size = (max_possible_radius * 2, max_possible_radius * 2)
+        self.light_surface_center = (max_possible_radius, max_possible_radius)
         
+        self.voice_light_bonus_radius = 0.0 # Bonus radius from voice
+        self.level_instance = level_instance # Store reference to the current level
+        self.full_illumination_triggered_this_session = False # Flag for full illumination
+        self.speaking_cooldown_timer = 0.0 # Timer to track if player is 'speaking'
+        self.time_since_last_ambient_speech = 0.0 # Timer for long silence decay
+
         # self.glow_surface = pygame.Surface(self.light_surface_size, pygame.SRCALPHA)
         # self.glow_surface.convert_alpha()
         self.mask_brush_surface = pygame.Surface(self.light_surface_size, pygame.SRCALPHA)
@@ -120,13 +137,25 @@ class Player(pygame.sprite.Sprite):
         """Resets the player's physics state and sets position."""
         self.rect.topleft = position
         self.movement_state.reset() # Reset movement state
+        self.voice_light_bonus_radius = 0.0 # Also reset voice light bonus
+        self.speaking_cooldown_timer = 0.0 # Reset speaking timer
+        self.time_since_last_ambient_speech = 0.0 # Reset long silence timer
+        self.full_illumination_triggered_this_session = False # Reset illumination trigger flag
     
+    def notify_ambient_speech(self):
+        """Called when non-command speech is detected. Sets a timer to indicate recent speech and resets long silence timer."""
+        self.speaking_cooldown_timer = VOICE_SPEECH_COOLDOWN_DURATION
+        self.time_since_last_ambient_speech = 0.0 # Reset long silence timer on any ambient speech
+
     def get_light_effects(self):
         """Prepares and returns player's light mask brush surface, its world position, radius, and center."""
         # Calculate current pulse values
         oscillation = math.sin(self.pulse_timer)
         current_radius_offset = oscillation * PLAYER_LIGHT_PULSE_AMPLITUDE
-        pulsing_radius = PLAYER_LIGHT_BASE_RADIUS + current_radius_offset
+        # Base radius now includes voice bonus
+        current_base_radius = PLAYER_LIGHT_BASE_RADIUS + self.voice_light_bonus_radius
+        pulsing_radius = current_base_radius + current_radius_offset
+        pulsing_radius = max(0, pulsing_radius) # Ensure radius is not negative
 
         normalized_sin_for_alpha = (oscillation + 1) / 2 # Range 0 to 1
         pulsing_alpha = PLAYER_LIGHT_MIN_ALPHA + normalized_sin_for_alpha * (PLAYER_LIGHT_MAX_ALPHA - PLAYER_LIGHT_MIN_ALPHA)
@@ -143,14 +172,45 @@ class Player(pygame.sprite.Sprite):
         
         return self.mask_brush_surface, (light_world_pos_x, light_world_pos_y), pulsing_radius, self.light_surface_center
 
-    # We need to handle jump and dash triggers via events in the main game loop
-    # The player.update method will just manage the state
-    def update(self):
+    def update(self, dt): # Added dt parameter
         """Update player state (called every frame)."""
         # Update pulse timer for light effect
-        self.pulse_timer += PLAYER_LIGHT_PULSE_SPEED * (1/FPS) # Tie speed to FPS for consistency
+        self.pulse_timer += PLAYER_LIGHT_PULSE_SPEED * dt # Tie speed to dt
         if self.pulse_timer > 2 * math.pi: # Keep angle within one cycle to prevent large numbers
             self.pulse_timer -= 2 * math.pi
+
+        # Voice-activated light expansion/decay logic
+        if self.speaking_cooldown_timer > 0:
+            self.speaking_cooldown_timer -= dt
+            self.speaking_cooldown_timer = max(0, self.speaking_cooldown_timer) # Ensure it doesn't go negative
+            
+            # Player is considered "speaking", increase light radius
+            increase_amount = VOICE_LIGHT_INCREASE_RATE * dt
+            self.voice_light_bonus_radius += increase_amount
+            self.voice_light_bonus_radius = min(self.voice_light_bonus_radius, VOICE_LIGHT_MAX_BONUS_RADIUS)
+            
+            # While actively speaking (or in cooldown), long silence timer is implicitly reset (or doesn't advance meaningfully)
+            # self.time_since_last_ambient_speech = 0 # This is handled by notify_ambient_speech now
+        else:
+            # Player is not in active speech cooldown, start counting time since last ambient speech
+            self.time_since_last_ambient_speech += dt
+            
+            # Only decay if the long silence duration has been met
+            if self.time_since_last_ambient_speech >= LONG_SILENCE_DURATION:
+                if self.voice_light_bonus_radius > 0:
+                    decay_amount = VOICE_LIGHT_DECAY_RATE * dt
+                    self.voice_light_bonus_radius -= decay_amount
+                    self.voice_light_bonus_radius = max(0, self.voice_light_bonus_radius)
+            # If self.time_since_last_ambient_speech < LONG_SILENCE_DURATION, bonus radius HOLDS its value.
+        
+        # Check for triggering full level illumination
+        if self.voice_light_bonus_radius >= VOICE_LIGHT_MAX_BONUS_RADIUS:
+            if not self.full_illumination_triggered_this_session and self.level_instance:
+                self.level_instance.start_full_illumination()
+                self.full_illumination_triggered_this_session = True
+        else:
+            # Reset the trigger if the light radius drops below max
+            self.full_illumination_triggered_this_session = False
 
         # Input polling is still useful for continuous movement (left/right)
         self.continually_input() # Poll left/right keys

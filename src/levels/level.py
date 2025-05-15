@@ -27,6 +27,10 @@ class Level:
         self.last_checkpoint_pos = None
         self.player = None
 
+        # Full illumination state
+        self.full_illumination_active = False
+        self.full_illumination_current_alpha = DARKNESS_COLOR[3] # Start with default darkness alpha
+
         self.setup_level(level_data)
 
     def setup_level(self, layout):
@@ -40,6 +44,10 @@ class Level:
         self.initial_player_pos = None
         self.last_checkpoint_pos = None
         self.player = None
+
+        # Reset full illumination state on level setup/reset
+        self.full_illumination_active = False
+        self.full_illumination_current_alpha = DARKNESS_COLOR[3] # Reset to default darkness alpha
 
         for row_index, row in enumerate(layout):
             for col_index, cell in enumerate(row):
@@ -74,7 +82,9 @@ class Level:
             self.trap_sprites,
             self.exit_sprites,
             self.trigger_level_complete, 
-            self.trigger_player_death
+            self.trigger_player_death,
+            self.game.input_buffer,
+            self # Pass the level instance to the player
         )
 
     def trigger_level_complete(self):
@@ -125,16 +135,32 @@ class Level:
                 checkpoint.is_active = False
                 checkpoint.image.fill(CHECKPOINT_YELLOW) 
 
-    def run(self):
+    def start_full_illumination(self):
+        """Initiates the full level illumination fade-in effect."""
+        if not self.full_illumination_active and self.full_illumination_current_alpha == DARKNESS_COLOR[3]:
+            # Only start if not already active/fading and at full darkness (or reset)
+            print("Level: Starting full illumination sequence.")
+            self.full_illumination_active = True
+
+    def run(self, dt): # Added dt parameter
         """Update and draw all sprites in the level."""
         if not self.player: return 
 
+        # Update full illumination fade
+        if self.full_illumination_active and self.full_illumination_current_alpha > FULL_ILLUMINATION_TARGET_ALPHA:
+            self.full_illumination_current_alpha -= FULL_ILLUMINATION_FADE_IN_SPEED * dt
+            self.full_illumination_current_alpha = max(self.full_illumination_current_alpha, FULL_ILLUMINATION_TARGET_ALPHA)
+        elif self.full_illumination_current_alpha <= FULL_ILLUMINATION_TARGET_ALPHA:
+            # If target is reached, could set full_illumination_active = False if it's a one-time effect per trigger
+            # For now, it will just stay at the target alpha once reached.
+            pass 
+
         # --- Update game logic first ---
-        self.visible_sprites.update() # This calls player.update() and other sprite updates
+        self.visible_sprites.update(dt) # Pass dt to player.update() and other sprite updates
         self.check_checkpoint_collisions()
 
         # --- Then draw everything ---
-        self.visible_sprites.custom_draw(self.player) # Draw all visible sprites including background and player
+        self.visible_sprites.custom_draw(self.player, self.full_illumination_current_alpha) # Pass current alpha
 
 
 class YSortCameraGroup(pygame.sprite.Group):
@@ -158,7 +184,19 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.darkness_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         self.darkness_surface.convert_alpha()
 
-    def custom_draw(self, player):
+    def update(self, dt): # Add dt parameter
+        """Update all sprites in the group, passing dt if they accept it."""
+        for sprite in self.sprites():
+            if hasattr(sprite, 'update'):
+                # Check if sprite's update method expects dt
+                # This is a bit of a simplification; proper way might involve inspect module
+                # For now, assume if it has update, it can take dt (common pattern)
+                try:
+                    sprite.update(dt)
+                except TypeError: # If it doesn't take dt, call without it
+                    sprite.update()
+
+    def custom_draw(self, player, current_darkness_alpha): # Added current_darkness_alpha
         """Draw layers, centering the camera on the player, and apply darkness effect."""
         if not self.display_surface:
             self.display_surface = pygame.display.get_surface()  # Try to get surface again
@@ -198,13 +236,10 @@ class YSortCameraGroup(pygame.sprite.Group):
             screen_light_pos = (light_world_pos[0] - self.offset.x,
                                 light_world_pos[1] - self.offset.y)
 
-            # 2. Prepare and apply darkness mask
-            #    Fill the darkness surface with fully opaque black
-            self.darkness_surface.fill(DARKNESS_COLOR) 
-
-            #    Blit the white mask_brush_surface onto the darkness_surface using BLEND_SUB.
-            #    This subtracts the brush's alpha from the darkness_surface's alpha,
-            #    effectively creating a soft-edged transparent hole.
+            # 1. Fill darkness_surface with the current dynamic alpha
+            self.darkness_surface.fill((0, 0, 0, int(current_darkness_alpha)))
+            
+            # 2. Blit the player's light brush onto this darkness_surface (carving out light)
             self.darkness_surface.blit(mask_brush_surface, screen_light_pos, special_flags=pygame.BLEND_RGBA_SUB)
             
             #    Blit the resulting darkness_surface (black with a soft transparent hole) onto the main display

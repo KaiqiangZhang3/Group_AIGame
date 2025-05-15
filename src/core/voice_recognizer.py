@@ -4,19 +4,19 @@ import threading
 import json
 import queue
 import time # Added for sleep on error
-from src.settings import VOSK_MODEL_PATH, VOSK_SAMPLE_RATE, VOSK_CHANNELS, VOSK_DEVICE_ID, VOICE_COMMAND_JUMP
+from src.settings import VOSK_MODEL_PATH, VOSK_SAMPLE_RATE, VOSK_CHANNELS, VOSK_DEVICE_ID, VOICE_COMMAND_PHRASES
 
 class VoiceRecognizer:
     """Handles offline voice recognition using Vosk."""
 
-    def __init__(self, input_buffer, model_path=VOSK_MODEL_PATH):
+    def __init__(self, game_instance, model_path=VOSK_MODEL_PATH):
         """
         Initializes the Vosk model and recognizer.
         Args:
-            input_buffer: An instance of the game's InputBuffer.
+            game_instance: An instance of the game's Game class.
             model_path: Path to the Vosk language model directory.
         """
-        self.input_buffer = input_buffer
+        self.game_instance = game_instance
         self.model_path = model_path
         self.model = None
         self.recognizer = None
@@ -43,30 +43,58 @@ class VoiceRecognizer:
             return
 
         self.recognizer = vosk.KaldiRecognizer(self.model, VOSK_SAMPLE_RATE)
-        print("Vosk recognizer created. Listening for 'jump'...")
-
-        detected_jump_in_current_segment = False
+        print("Vosk recognizer created. Listening...")
 
         while self._listening_flag:
             try:
                 data = self.audio_queue.get(timeout=0.05)
+                command_processed_from_partial = False
+
+                # Process partial result for immediate commands
+                # Check PartialResult only if data was actually fed for this iteration,
+                # otherwise, it might return stale partials if AcceptWaveform wasn't true before.
+                # However, AcceptWaveform itself consumes data, so we check partial *before* full AcceptWaveform.
+                partial_result_json = self.recognizer.PartialResult()
+                partial_result_dict = json.loads(partial_result_json)
+                partial_text = partial_result_dict.get('partial', '').strip().lower()
+
+                if partial_text: # Only process if there's actual partial text
+                    # print(f"Vosk Partial: '{partial_text}'") # Optional: for debugging
+                    for command_phrase in VOICE_COMMAND_PHRASES:
+                        # Using '==' for exact match, suitable for simple commands like "jump"
+                        if partial_text == command_phrase:
+                            print(f"Vosk: Partial recognized command: '{command_phrase}'")
+                            if self.game_instance:
+                                self.game_instance.handle_recognized_speech(command_phrase)
+                            # IMPORTANT: Reset the recognizer to prevent this segment
+                            # from being re-processed by recognizer.Result() or stale partials.
+                            self.recognizer.Reset() 
+                            command_processed_from_partial = True
+                            break # Command found and processed, exit loop
                 
+                if command_processed_from_partial:
+                    # If a command was handled from partial, we might want to clear the audio queue
+                    # or just continue to avoid processing the same audio chunk again with Result().
+                    # For now, just continue, as Reset() should prevent re-processing of the *recognized text*.
+                    continue 
+
+                # Process full result (if no command from partial or if partial was empty)
                 if self.recognizer.AcceptWaveform(data):
-                    detected_jump_in_current_segment = False
-                    result = json.loads(self.recognizer.Result())
-                    command = result.get('text', '').lower()
-                    print(f"Final recognized: {command}") 
-
-                else:
-                    partial_result = json.loads(self.recognizer.PartialResult())
-                    partial_command = partial_result.get('partial', '').lower()
-
-                    if "jump" in partial_command and not detected_jump_in_current_segment:
-                        print("Vosk (partial): JUMP detected! Adding to input buffer.")
-                        self.input_buffer.add_input(VOICE_COMMAND_JUMP)
-                        detected_jump_in_current_segment = True
+                    result_json = self.recognizer.Result()
+                    result_dict = json.loads(result_json)
+                    recognized_text = result_dict.get('text', '').strip().lower()
+                    
+                    # print(f"Vosk Final recognized: '{recognized_text}'") 
+                    if self.game_instance and recognized_text: # Ensure text is not empty
+                        self.game_instance.handle_recognized_speech(recognized_text)
+                # else:
+                    # For debugging, can print partial result if not a full phrase yet
+                    # partial_result_debug = json.loads(self.recognizer.PartialResult())
+                    # if partial_result_debug.get('partial', ''):
+                    #     print(f"Vosk Partial (no full phrase yet): '{partial_result_debug['partial']}'")
 
             except queue.Empty:
+                # This is normal, means no audio data in the queue for this timeout period
                 continue
             except Exception as e:
                 print(f"Error in Vosk audio processing: {e}")
@@ -167,24 +195,20 @@ if __name__ == '__main__':
         print("Skipping __main__ test: VOSK_MODEL_PATH is not configured or is a placeholder.")
         print("Please download a Vosk model and update VOSK_MODEL_PATH in settings.py.")
     else:
-        # Dummy InputBuffer for testing
-        class DummyInputBuffer:
+        class DummyGameInstance:
             def __init__(self):
-                self.inputs = []
-            def add_input(self, command):
-                print(f"InputBuffer received: {command}")
-                self.inputs.append(command)
-            def get_and_remove_input(self, command):
-                if command in self.inputs:
-                    self.inputs.remove(command)
-                    return True
-                return False
+                self.input_buffer = []
+            def handle_recognized_speech(self, text):
+                print(f"DummyGameInstance received speech: '{text}'")
+                # Simplified test: if 'jump' in text, add to buffer
+                if "jump" in text:
+                    self.input_buffer.append("VOICE_JUMP") # Use a placeholder if VOICE_COMMAND_JUMP is not imported
 
-        test_input_buffer = DummyInputBuffer()
-        recognizer = VoiceRecognizer(input_buffer=test_input_buffer, model_path=VOSK_MODEL_PATH)
+        test_game_instance = DummyGameInstance()
+        recognizer = VoiceRecognizer(game_instance=test_game_instance, model_path=VOSK_MODEL_PATH)
         if recognizer.model: # Only start if model loaded
             recognizer.start_listening()
-            print("Say 'jump'. Listening for 10 seconds...")
+            print("Say something. Listening for 10 seconds...")
             try:
                 time.sleep(10) # Listen for 10 seconds
             except KeyboardInterrupt:

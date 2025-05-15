@@ -100,7 +100,16 @@ FIREFLY_PARALLAX_FACTOR = 0.7    # Fireflies move at 70% of global drift
 # -----------------------------------------
 
 # Voice Command Constants for Input Buffer
-VOICE_COMMAND_JUMP = "VOICE_JUMP"
+VOICE_COMMAND_JUMP = "VOICE_JUMP" # Input buffer token for voice jump
+VOICE_COMMAND_PHRASES = ["jump"] # List of actual phrases to recognize as commands
+
+# Voice-activated Light Expansion Settings
+# VOICE_LIGHT_EXPANSION_AMOUNT = 20  # Pixels to add to radius per ambient speech detection (REPLACED)
+VOICE_LIGHT_INCREASE_RATE = 60     # Pixels per second the bonus radius increases while speaking
+VOICE_SPEECH_COOLDOWN_DURATION = 0.5 # Seconds to consider player 'speaking' after speech detection
+VOICE_LIGHT_MAX_BONUS_RADIUS = 200 # Maximum additional radius from voice
+VOICE_LIGHT_DECAY_RATE = 15        # Pixels per second the bonus radius decays (used after long silence)
+LONG_SILENCE_DURATION = 10.0       # Seconds of silence before bonus light starts to decay
 
 # Voice Recognition (Vosk) Settings
 # IMPORTANT: Download a Vosk model (e.g., vosk-model-small-en-us-0.15)
@@ -117,3 +126,11 @@ VOSK_DEVICE_ID = None     # None for default device, or an integer device ID
 
 # Voice Recognition Toggle Setting
 VOICE_RECOGNITION_ENABLED_BY_DEFAULT = True
+
+# --- Full Level Illumination on Max Voice Light (NEW) ---
+FULL_ILLUMINATION_FADE_IN_SPEED = 120  # Alpha units per second to fade in
+FULL_ILLUMINATION_TARGET_ALPHA = 30    # Target alpha for darkness overlay (0-255, lower is brighter)
+
+# Moving Spike Settings
+MOVING_SPIKE_SPEED = 2
+MOVING_SPIKE_HORIZONTAL_RANGE = 3 # Number of tiles the spike moves left/right from its start
