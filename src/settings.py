@@ -53,6 +53,16 @@ PLAYER_LIGHT_MAX_ALPHA = 170      # Maximum alpha for the glow during pulse
 DARKNESS_COLOR = (0, 0, 0, 255)     # RGBA for the darkness overlay (fully opaque black)
 PLAYER_MASK_BRUSH_COLOR = (255, 255, 255) # White color for the mask brush surface
 
+# --- Synchronized "Perfect" Action System ---
+PERFECT_ACTION_WINDOW_MS = 1000  # Milliseconds window for synchronized input
+PERFECT_ACTION_DURATION_S = 1.0  # Seconds the player changes color
+PERFECT_ACTION_COLOR = RED       # Color for perfect action (uses existing RED)
+PLAYER_DEFAULT_COLOR = PLAYER_COLOR # Store the original player color
+
+# Input Buffer Event Types (extending beyond just voice)
+INPUT_BUFFER_KEY_JUMP = "KEY_JUMP"
+INPUT_BUFFER_KEY_DASH = "KEY_DASH"
+
 # Moving Spike Settings
 MOVING_SPIKE_SPEED = 2
 MOVING_SPIKE_HORIZONTAL_RANGE = 3 # Number of tiles the spike moves left/right from its start
@@ -101,10 +111,10 @@ FIREFLY_PARALLAX_FACTOR = 0.7    # Fireflies move at 70% of global drift
 
 # Voice Command Constants for Input Buffer
 VOICE_COMMAND_JUMP = "VOICE_JUMP" # Input buffer token for voice jump
-VOICE_COMMAND_PHRASES = ["jump"] # List of actual phrases to recognize as commands
+VOICE_COMMAND_DASH = "VOICE_DASH" # Input buffer token for voice dash
+VOICE_COMMAND_PHRASES = ["jump", "dash"] # List of actual phrases to recognize as commands
 
 # Voice-activated Light Expansion Settings
-# VOICE_LIGHT_EXPANSION_AMOUNT = 20  # Pixels to add to radius per ambient speech detection (REPLACED)
 VOICE_LIGHT_INCREASE_RATE = 60     # Pixels per second the bonus radius increases while speaking
 VOICE_SPEECH_COOLDOWN_DURATION = 0.5 # Seconds to consider player 'speaking' after speech detection
 VOICE_LIGHT_MAX_BONUS_RADIUS = 200 # Maximum additional radius from voice

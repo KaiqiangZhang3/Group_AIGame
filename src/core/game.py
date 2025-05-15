@@ -2,7 +2,7 @@ import pygame
 from src.settings import *
 from src.ui.menu import Menu
 from src.levels.level_manager import LevelManager
-from src.core.util import events_handler, draw_frame, player_input
+from src.core.util import events_handler, draw_frame
 from src.core.input_buffer import InputBuffer
 from src.core.voice_recognizer import VoiceRecognizer
 
@@ -70,13 +70,13 @@ class Game:
 
         # Check if the recognized text is a predefined command
         if normalized_text in VOICE_COMMAND_PHRASES:
-            # Handle known commands (currently only "jump")
+            # Handle known commands
             if normalized_text == "jump": # Assuming "jump" is in VOICE_COMMAND_PHRASES
                 print(f"Game: Recognized command '{normalized_text}'. Adding to input buffer.")
                 self.input_buffer.add_input(VOICE_COMMAND_JUMP)
-            # Add other commands here if needed, e.g.:
-            # elif normalized_text == "dash":
-            #     self.input_buffer.add_input(VOICE_COMMAND_DASH) 
+            elif normalized_text == "dash": # Ensure "dash" is in VOICE_COMMAND_PHRASES
+                print(f"Game: Recognized command '{normalized_text}'. Adding to input buffer.")
+                self.input_buffer.add_input(VOICE_COMMAND_DASH)
         else:
             # If not a command, treat as ambient speech for light expansion
             # Ensure player exists and is part of the current level setup
@@ -93,7 +93,7 @@ class Game:
 
                 # --- Event Handling ---
                 events_handler(pygame.event.get(), self)
-                player_input(self) # Process player input based on the current state
+                # player_input(self) # Player input processing will be handled by the Player class via the LevelManager
                 draw_frame(self, dt) # Draw the current frame based on state, pass dt
                 self.input_buffer.clear_expired_inputs() # Clear expired inputs from the buffer
                 # --- Final Update --- 
