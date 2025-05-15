@@ -1,7 +1,7 @@
 from enum import Enum, auto
 import os
 
-GAME_NAME = "I Wanna Study Computer Science"
+GAME_NAME = "Illumination"
 
 # Screen dimensions
 SCREEN_WIDTH = 1024
@@ -17,7 +17,8 @@ GREEN = (0, 255, 0)      # Exit tiles
 # LIGHT_GREY = (100, 100, 100) # Removed - Was for fancier menu background
 SILVER = (192, 192, 192) # Traps
 EARTH_BROWN = (139, 69, 19) # Platforms
-LIGHT_PINK = (255, 182, 193) # Player
+PLAYER_COLOR = (255, 255, 0) # Player is now yellow
+PLAYER_GLOW_COLOR = (255, 255, 150) # Soft yellow glow (RGB only, Alpha will be dynamic)
 CHECKPOINT_YELLOW = (255, 255, 0) # Yellow for inactive checkpoints
 CHECKPOINT_ACTIVE_BLUE = (0, 0, 255) # Blue for active checkpoints
 SKY_BLUE = (135, 206, 235) # Added missing color
@@ -44,6 +45,13 @@ PLAYER_DASH_PREPARE_FRAMES = 5 # Frames before dash to prepare
 PLAYER_DASH_SPEED = 20   # Speed during dash
 PLAYER_DASH_DURATION = 13 # Duration of dash in frames
 PLAYER_DASH_COOLDOWN = 30  # Cooldown period for dash in frames
+PLAYER_LIGHT_BASE_RADIUS = 60 # Base radius of the player's light glow
+PLAYER_LIGHT_PULSE_AMPLITUDE = 15 # How much the radius changes from base
+PLAYER_LIGHT_PULSE_SPEED = 1.5    # Speed of the pulsing (higher is faster)
+PLAYER_LIGHT_MIN_ALPHA = 70       # Minimum alpha for the glow during pulse
+PLAYER_LIGHT_MAX_ALPHA = 170      # Maximum alpha for the glow during pulse
+DARKNESS_COLOR = (0, 0, 0, 255)     # RGBA for the darkness overlay (fully opaque black)
+PLAYER_MASK_BRUSH_COLOR = (255, 255, 255) # White color for the mask brush surface
 
 # Moving Spike Settings
 MOVING_SPIKE_SPEED = 2
@@ -92,7 +100,16 @@ FIREFLY_PARALLAX_FACTOR = 0.7    # Fireflies move at 70% of global drift
 # -----------------------------------------
 
 # Voice Command Constants for Input Buffer
-VOICE_COMMAND_JUMP = "VOICE_JUMP"
+VOICE_COMMAND_JUMP = "VOICE_JUMP" # Input buffer token for voice jump
+VOICE_COMMAND_PHRASES = ["jump"] # List of actual phrases to recognize as commands
+
+# Voice-activated Light Expansion Settings
+# VOICE_LIGHT_EXPANSION_AMOUNT = 20  # Pixels to add to radius per ambient speech detection (REPLACED)
+VOICE_LIGHT_INCREASE_RATE = 60     # Pixels per second the bonus radius increases while speaking
+VOICE_SPEECH_COOLDOWN_DURATION = 0.5 # Seconds to consider player 'speaking' after speech detection
+VOICE_LIGHT_MAX_BONUS_RADIUS = 200 # Maximum additional radius from voice
+VOICE_LIGHT_DECAY_RATE = 15        # Pixels per second the bonus radius decays (used after long silence)
+LONG_SILENCE_DURATION = 10.0       # Seconds of silence before bonus light starts to decay
 
 # Voice Recognition (Vosk) Settings
 # IMPORTANT: Download a Vosk model (e.g., vosk-model-small-en-us-0.15)
@@ -109,3 +126,32 @@ VOSK_DEVICE_ID = None     # None for default device, or an integer device ID
 
 # Voice Recognition Toggle Setting
 VOICE_RECOGNITION_ENABLED_BY_DEFAULT = True
+
+# --- Magical Level Background Effects (NEW) ---
+LEVEL_BG_GRADIENT_TOP = (40, 0, 60)      # Dark magenta/purple
+LEVEL_BG_GRADIENT_BOTTOM = (10, 10, 30)  # Deep dark blue
+LEVEL_BG_PARTICLE_COLORS = [
+    (255, 223, 186, 150), # Light gold, semi-transparent
+    (173, 216, 230, 120), # Light blue, semi-transparent
+    (221, 160, 221, 100)  # Plum/Orchid, semi-transparent
+]
+LEVEL_BG_PARTICLE_COUNT = 50
+LEVEL_BG_PARTICLE_SPEED_RANGE = (0.5, 1.5) # Pixels per second
+LEVEL_BG_PARTICLE_RADIUS_RANGE = (2, 5)
+LEVEL_BG_WISP_COLORS = [
+    (255, 255, 0, 50),    # Faint yellow
+    (138, 43, 226, 40)    # Faint blue-violet
+]
+LEVEL_BG_WISP_COUNT = 5
+LEVEL_BG_WISP_MAX_LENGTH = 150
+LEVEL_BG_WISP_MAX_WIDTH = 8
+LEVEL_BG_WISP_SPEED_RANGE = (20, 40) # Pixels per second for leading point
+# --------------------------------------------------
+
+# --- Full Level Illumination on Max Voice Light (NEW) ---
+FULL_ILLUMINATION_FADE_IN_SPEED = 120  # Alpha units per second to fade in
+FULL_ILLUMINATION_TARGET_ALPHA = 30    # Target alpha for darkness overlay (0-255, lower is brighter)
+
+# Moving Spike Settings
+MOVING_SPIKE_SPEED = 2
+MOVING_SPIKE_HORIZONTAL_RANGE = 3 # Number of tiles the spike moves left/right from its start
