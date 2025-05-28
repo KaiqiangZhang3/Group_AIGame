@@ -73,5 +73,29 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     next_level=LEVEL_2
 )
 
+LEVEL_3  = LevelData(
+    name = "Level 3",
+    background_music=None,
+    next_level=None,
+    layout=
+"""
+X                                                                                          
+X
+X
+X
+X                        S                              
+X                        X                            S                      E
+X      XXXXXXX           X              S             X             XXXXXXXXXX
+X      X     X                          X             X             X
+X      X     X                          X                           X
+X      X     X                                                      X
+X      X     X                                                      XXXXXXXXXXX
+X      X     X
+X      X     X
+X      X     X
+X P    X     XSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+"""
+)
 
-ROOT_LEVEL = LEVEL_1
+ROOT_LEVEL = LEVEL_3

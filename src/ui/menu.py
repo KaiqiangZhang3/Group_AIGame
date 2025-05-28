@@ -1,10 +1,6 @@
 import pygame
 import sys
-from src.settings import (
-    SCREEN_WIDTH, SCREEN_HEIGHT, ELEGANT_FONT_SIZE, 
-    MINIMAL_MENU_TEXT_COLOR, MINIMAL_MENU_HIGHLIGHT_COLOR, 
-    MINIMAL_MENU_GLOW_COLOR, ELEGANT_FONT_PATH, GameState
-)
+from src.settings import *
 from src.ui.menu_effects import MenuBackgroundAnimator
 
 class Menu:

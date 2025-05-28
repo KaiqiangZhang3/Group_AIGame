@@ -33,7 +33,7 @@ class GameState(Enum):
 # Player setting
 ACELERATION_FRAME = 6 # Frames to reach max speed
 DECELERATION_FRAME = 3 # Frames to stop from max speed
-CLIMBING_JUMP_FRAME = 6
+CLIMBING_JUMP_FRAME = 10
 PLAYER_GRAVITY = 0.6
 JUMP_TOLERANCE_FRAME = 6
 PLAYER_JUMP_STRENGTH = -11 # Increased initial jump height

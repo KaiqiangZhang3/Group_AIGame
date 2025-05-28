@@ -153,7 +153,7 @@ class MovementState:
     def update_climbing(self):
         """Update climbing state."""
         if self.is_climbing:
-            self.velocity[1] = 1
+            self.velocity[1] = 1.5
 
     def update_climbing_jump(self):
         """Update climbing jump state."""
