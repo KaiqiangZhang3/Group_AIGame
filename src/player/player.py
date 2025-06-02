@@ -1,19 +1,21 @@
 import pygame
+import os
 from src.settings import *
 from src.player.movement_state import MovementState
+from src.animation import Animator # Added Animator import
 from src.settings import VOICE_COMMAND_JUMP
 
 class Player(pygame.sprite.Sprite):
     """Represents the player character."""
     def __init__(self, pos, groups, obstacle_sprites, trap_sprites, exit_sprites, level_complete_callback, death_callback): 
         super().__init__(groups)
-        # Visual representation (Circle)
-        diameter = TILE_SIZE - 8 # Diameter of the ball
-        self.image = pygame.Surface((diameter, diameter), pygame.SRCALPHA) # Create a surface with transparency
-        self.image.convert_alpha() # Ensure alpha channel is optimized
-        pygame.draw.circle(self.image, LIGHT_PINK, (diameter // 2, diameter // 2), diameter // 2) # Draw light pink circle centered
-        # Hitbox for collision (remains a rectangle, centered on the visual)
-        self.rect = self.image.get_rect(topleft=(pos[0] + 4, pos[1] + 4)) # Position hitbox based on top-left
+        # Animator setup
+        # Assuming player.py is in src/player/ and Assets is in the project root
+        # Adjust path if your project structure is different
+        sprites_base_path = os.path.join(os.path.dirname(__file__), '..', '..', 'Assets', 'Sprites')
+        self.animator = Animator(sprites_base_path)
+        self.image = self.animator.get_current_image()
+        self.rect = self.image.get_rect(topleft=pos)
 
         self.movement_state = MovementState() # Initialize movement state
 
@@ -110,7 +112,50 @@ class Player(pygame.sprite.Sprite):
     
     # We need to handle jump and dash triggers via events in the main game loop
     # The player.update method will just manage the state
-    def update(self):
+    def _get_animation_action(self):
+        """Determine the animation action string based on the current movement state."""
+        # Priority: Attacking, Hurt, Death (These would need new flags in MovementState and handling)
+        # Example: if self.movement_state.is_attacking and 'attack_1' in self.animator.animations: return 'attack_1'
+        # Example: if self.movement_state.is_hurt and 'hurt' in self.animator.animations: return 'hurt'
+
+        if self.movement_state.is_dashing and 'dash' in self.animator.animations:
+            return 'dash'
+        
+        if self.movement_state.is_climbing_jump:
+            return 'wall_jump' if 'wall_jump' in self.animator.animations else 'jump'
+        
+        if self.movement_state.is_climbing:
+            if 'climbing' in self.animator.animations:
+                return 'climbing'
+            # Fallback to wall_slide if climbing not distinct or player is sliding down wall
+            elif self.movement_state.velocity[1] > 0 and 'wall_slide' in self.animator.animations:
+                return 'wall_slide'
+            elif 'wall_contact' in self.animator.animations: # If stationary on wall
+                 return 'wall_contact'
+            return 'jump_fall' # Generic fallback
+
+        if not self.movement_state.on_ground:
+            if self.movement_state.velocity[1] < -0.1: # Moving up (0.1 threshold for sensitivity)
+                if self.movement_state.air_frames < 5 and 'jump_start' in self.animator.animations:
+                    return 'jump_start'
+                return 'jump' if 'jump' in self.animator.animations else 'idle'
+            elif self.movement_state.velocity[1] > 0.1: # Moving down
+                return 'jump_fall' if 'jump_fall' in self.animator.animations else 'idle'
+            else: # Near apex of jump
+                return 'jump_transition' if 'jump_transition' in self.animator.animations else ('jump' if 'jump' in self.animator.animations else 'idle')
+
+        if self.movement_state.is_running:
+            if 'run' in self.animator.animations:
+                return 'run'
+            elif 'walk' in self.animator.animations: # Fallback to walk if run isn't present
+                return 'walk'
+        
+        if self.movement_state.is_idle:
+            return 'idle'
+        
+        return 'idle' # Default fallback
+
+    def update(self, dt):
         """Update player state (called every frame)."""
         # Input polling is still useful for continuous movement (left/right)
         self.continually_input() # Poll left/right keys
@@ -122,3 +167,20 @@ class Player(pygame.sprite.Sprite):
         # Check for interactions AFTER movement/collision resolution
         self.check_trap_collision() # Check for trap collisions
         self.check_exit_collision() # Check for exit collisions
+
+        # Animation update
+        action = self._get_animation_action()
+        self.animator.set_action(action)
+        self.animator.update(dt)
+        
+        new_image = self.animator.get_current_image()
+        if self.movement_state.direction == -1: # Facing left
+            self.image = pygame.transform.flip(new_image, True, False)
+        else: # Facing right
+            self.image = new_image
+        
+        # Preserve the center of the rect when changing image/size to avoid jitter
+        # This is a common strategy but might need fine-tuning based on sprite pivot points.
+        current_center = self.rect.center
+        self.rect.size = self.image.get_size()
+        self.rect.center = current_center

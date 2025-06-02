@@ -125,13 +125,13 @@ class Level:
                 checkpoint.is_active = False
                 checkpoint.image.fill(CHECKPOINT_YELLOW) 
 
-    def run(self):
-        """Update and draw all sprites in the level."""
+    def run(self, dt):
+        """Update and draw all sprites in the level, using delta time."""
         if not self.player: return 
 
         self.visible_sprites.custom_draw(self.player)
 
-        self.visible_sprites.update()
+        self.visible_sprites.update(dt)
 
         self.check_checkpoint_collisions()
 

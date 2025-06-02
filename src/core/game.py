@@ -64,13 +64,13 @@ class Game:
         try:
             while True:
                 # --- Event Handling ---
+                dt = self.clock.tick(FPS) / 1000.0 # Delta time in seconds
                 events_handler(pygame.event.get(), self)
                 player_input(self) # Process player input based on the current state
-                draw_frame(self) # Draw the current frame based on state
+                draw_frame(self, dt) # Draw the current frame based on state, now with dt
                 self.input_buffer.clear_expired_inputs() # Clear expired inputs from the buffer
                 # --- Final Update --- 
                 pygame.display.flip() # Update the full display surface once per frame
-                self.clock.tick(FPS)
         finally:
             # Ensure voice recognizer is stopped cleanly when game exits
             if hasattr(self, 'voice_recognizer') and self.voice_recognizer:
