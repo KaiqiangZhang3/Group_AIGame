@@ -3,6 +3,7 @@ from src.settings import *
 from src.levels.tile import Tile
 from src.player.player import Player
 from src.entities.moving_spike import MovingSpike
+from src.entities.coin import Coin
 
 class Level:
     """Manages the game level, including tiles, player, and interactions."""
@@ -18,11 +19,14 @@ class Level:
         # Sprite group setup
         self.visible_sprites = YSortCameraGroup(self.level_width, self.level_height)
         self.obstacle_sprites = pygame.sprite.Group()
-        self.exit_sprites = pygame.sprite.Group()
-        self.trap_sprites = pygame.sprite.Group()
-        self.checkpoint_sprites = pygame.sprite.Group()
-
-        # Player spawn and checkpoint tracking
+        self.exit_sprites = pygame.sprite.Group() # Group for exit points
+        self.checkpoint_sprites = pygame.sprite.Group() # Group for checkpoints
+        self.moving_spike_sprites = pygame.sprite.Group() # Group for moving spikes
+        self.trap_sprites = pygame.sprite.Group() # Group for traps
+        self.coin_sprites = pygame.sprite.Group() # Group for coins
+        self.all_coins_in_level = [] # Keep track of all coins for reset
+        self.temp_platforms = [] # Keep track of all temporary platforms for reset
+        self.periodic_platforms = [] # Keep track of all periodic platforms
         self.initial_player_pos = None
         self.last_checkpoint_pos = None
         self.player = None
@@ -35,8 +39,13 @@ class Level:
         self.visible_sprites.empty()
         self.obstacle_sprites.empty()
         self.exit_sprites.empty()
-        self.trap_sprites.empty()
         self.checkpoint_sprites.empty()
+        self.moving_spike_sprites.empty()
+        self.trap_sprites.empty()
+        self.coin_sprites.empty()
+        self.all_coins_in_level.clear() # Reset coins
+        self.temp_platforms.clear() # Reset temporary platforms list
+        self.periodic_platforms.clear() # Reset periodic platforms list
         self.initial_player_pos = None
         self.last_checkpoint_pos = None
         self.player = None
@@ -62,9 +71,20 @@ class Level:
                     Tile((x, y), [self.visible_sprites, self.obstacle_sprites])
                     # Create the Moving Spike itself (ensure it's added to traps)
                     MovingSpike((x, y), [self.visible_sprites, self.trap_sprites])
+                elif cell == TEMP_PLATFORM_CHAR:
+                    tile = Tile(pos, [self.visible_sprites, self.obstacle_sprites], tile_type='temp_platform')
+                    self.temp_platforms.append(tile)
+                elif cell == PERIODIC_PLATFORM_CHAR:
+                    tile = Tile(pos, [self.visible_sprites], tile_type='periodic_platform') # Only add to visible initially
+                    self.periodic_platforms.append(tile)
+                    if tile.is_currently_visible: # Add to obstacles if starting visible
+                        self.obstacle_sprites.add(tile)
                 elif cell == 'P': 
                     if not self.initial_player_pos:
                         self.initial_player_pos = pos
+                elif cell == COIN_CHAR:
+                    coin = Coin(pos, [self.visible_sprites, self.coin_sprites])
+                    self.all_coins_in_level.append(coin)
 
         self.initial_player_pos = self.initial_player_pos if self.initial_player_pos else (100, 100) # Fallback position
         self.player = Player(
@@ -73,6 +93,7 @@ class Level:
             self.obstacle_sprites,
             self.trap_sprites,
             self.exit_sprites,
+            self.coin_sprites, # Added coin_sprites group for player to interact with
             self.trigger_level_complete, 
             self.trigger_player_death
         )
@@ -112,8 +133,38 @@ class Level:
         """Reset the player's state and position to the last checkpoint or start."""
         if self.player:
             respawn_pos = self.get_respawn_position()
+            print("[DEBUG] Level.reset_player_to_respawn called.") # DEBUG
             self.player.reset_state(respawn_pos)
             self.game.current_state = GameState.PLAYING
+
+            # Reset coins so they reappear
+            for coin in self.all_coins_in_level:
+                coin.reset() # This resets the coin's internal 'is_collected' state
+                # If coin.collect() uses self.kill(), it's removed from all groups.
+                # We need to add it back to the relevant groups to make it visible and interactive again.
+                if not coin.alive(): # check if it's not part of any group
+                    self.visible_sprites.add(coin)
+                self.coin_sprites.add(coin)
+
+            # Reset temporary platforms
+            print(f"[DEBUG] Resetting {len(self.temp_platforms)} temporary platforms.") # DEBUG
+            for i, platform in enumerate(self.temp_platforms):
+                print(f"[DEBUG] TempPlatform {i}: Initial alive state: {platform.alive()}") # DEBUG
+                platform.reset_timer()
+                print(f"[DEBUG] TempPlatform {i}: State after reset_timer. Alive: {platform.alive()}, Groups: {platform.groups()}") # DEBUG
+                if not platform.alive():
+                    print(f"[DEBUG] TempPlatform {i}: Re-adding to visible and obstacle sprites.") # DEBUG
+                    self.visible_sprites.add(platform)
+                    self.obstacle_sprites.add(platform)
+                    print(f"[DEBUG] TempPlatform {i}: State after re-adding. Alive: {platform.alive()}, Groups: {platform.groups()}") # DEBUG
+                else:
+                    print(f"[DEBUG] TempPlatform {i}: Was already alive. Groups: {platform.groups()}") # DEBUG
+                    # Ensure it's in obstacle_sprites if it somehow got removed but stayed alive
+                    if platform not in self.obstacle_sprites:
+                        print(f"[DEBUG] TempPlatform {i}: Was alive but not in obstacle_sprites. Re-adding to obstacle_sprites.") # DEBUG
+                        self.obstacle_sprites.add(platform)
+                        print(f"[DEBUG] TempPlatform {i}: Groups after ensuring obstacle: {platform.groups()}") # DEBUG
+
         else:
             print("Error: Attempted to reset player, but player does not exist.")
 
@@ -129,11 +180,21 @@ class Level:
         """Update and draw all sprites in the level, using delta time."""
         if not self.player: return 
 
-        self.visible_sprites.custom_draw(self.player)
+        self.visible_sprites.custom_draw(self.player) # Draw based on previous frame's state, before updates
 
-        self.visible_sprites.update(dt)
+        self.visible_sprites.update(dt) # Update all sprites (player, tiles, entities)
 
-        self.check_checkpoint_collisions()
+        # Update periodic platform collision status AFTER their state has been updated by visible_sprites.update()
+        # This ensures collision status matches visual status for the current frame.
+        for platform in self.periodic_platforms:
+            if platform.is_currently_visible:
+                if platform not in self.obstacle_sprites:
+                    self.obstacle_sprites.add(platform)
+            else: # It's invisible
+                if platform in self.obstacle_sprites:
+                    self.obstacle_sprites.remove(platform)
+
+        self.check_checkpoint_collisions() # Checkpoint logic can run after player has moved
 
 
 class YSortCameraGroup(pygame.sprite.Group):

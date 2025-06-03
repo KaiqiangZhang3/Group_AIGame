@@ -7,7 +7,7 @@ from src.settings import VOICE_COMMAND_JUMP
 
 class Player(pygame.sprite.Sprite):
     """Represents the player character."""
-    def __init__(self, pos, groups, obstacle_sprites, trap_sprites, exit_sprites, level_complete_callback, death_callback): 
+    def __init__(self, pos, groups, obstacle_sprites, trap_sprites, exit_sprites, coin_sprites, level_complete_callback, death_callback): 
         super().__init__(groups)
         # Animator setup
         # Assuming player.py is in src/player/ and Assets is in the project root
@@ -23,6 +23,7 @@ class Player(pygame.sprite.Sprite):
         self.obstacle_sprites = obstacle_sprites
         self.trap_sprites = trap_sprites # Store trap sprites
         self.exit_sprites = exit_sprites # Store exit sprites
+        self.coin_sprites = coin_sprites # Store coin sprites
         self.level_complete_callback = level_complete_callback # For reaching exit
         self.death_callback = death_callback # Store death callback (for hitting traps)
     
@@ -84,6 +85,10 @@ class Player(pygame.sprite.Sprite):
                     self.movement_state.on_ground = True
                     self.movement_state.air_frames = 0 # Reset air frames
                     self.movement_state.is_climbing = False # Stop climbing
+                    # Check if landed on a temporary platform and activate its timer
+                    if hasattr(sprite, 'tile_type') and sprite.tile_type == 'temp_platform':
+                        if hasattr(sprite, 'activate_timer'):
+                            sprite.activate_timer()
                 elif self.movement_state.velocity[1] < 0: # Moving up (jumping)
                     self.rect.top = sprite.rect.bottom
                 self.movement_state.velocity[1] = 0 # Stop upward movement
@@ -104,6 +109,18 @@ class Player(pygame.sprite.Sprite):
         exit_hit = pygame.sprite.spritecollideany(self, self.exit_sprites)
         if exit_hit:
             self.level_complete_callback()
+
+    def _check_coin_collision(self):
+        """Check for collisions with coins and collect them."""
+        # Use spritecollide to get a list of all coins hit
+        collided_coins = pygame.sprite.spritecollide(self, self.coin_sprites, False) # False so coin isn't auto-removed
+        for coin in collided_coins:
+            if hasattr(coin, 'is_collected') and not coin.is_collected:
+                if hasattr(coin, 'collect'):
+                    coin.collect() # Coin handles its own removal from groups
+                if hasattr(self.movement_state, 'recharge_double_jump'):
+                    self.movement_state.recharge_double_jump()
+                    # Optional: Add a sound effect or visual feedback here
 
     def reset_state(self, position):
         """Resets the player's physics state and sets position."""
@@ -167,6 +184,7 @@ class Player(pygame.sprite.Sprite):
         # Check for interactions AFTER movement/collision resolution
         self.check_trap_collision() # Check for trap collisions
         self.check_exit_collision() # Check for exit collisions
+        self._check_coin_collision() # Check for coin collisions
 
         # Animation update
         action = self._get_animation_action()
