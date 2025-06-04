@@ -107,5 +107,24 @@ VOSK_CHANNELS = 1         # Mono audio
 # Run voice_recognizer.py directly (once model path is set) to see available devices if needed.
 VOSK_DEVICE_ID = None     # None for default device, or an integer device ID
 
+# Temporary Platform Settings
+TEMP_PLATFORM_CHAR = 'T'  # Character to represent temporary platforms in level data
+TEMP_PLATFORM_DURATION_S = 1.0  # Seconds before platform disappears after being touched
+TEMP_PLATFORM_COLOR = (200, 200, 100)  # Initial color of the temporary platform
+TEMP_PLATFORM_FADING_COLOR = (150, 150, 75) # Color when platform is about to disappear
+
+# Coin Settings
+COIN_CHAR = 'o'  # Character for coins in level data
+COIN_COLOR_PRIMARY = (255, 215, 0)  # Gold
+COIN_COLOR_SHINE = (255, 255, 150) # Light yellow for shine effect
+COIN_ANIMATION_SPEED = 0.15  # Seconds per frame of animation
+COIN_RADIUS = TILE_SIZE // 3
+
+# Periodic Platform Settings
+PERIODIC_PLATFORM_CHAR = 'a'
+PERIODIC_PLATFORM_VISIBLE_S = 2.0  # Duration visible
+PERIODIC_PLATFORM_INVISIBLE_S = 2.0  # Duration invisible
+PERIODIC_PLATFORM_COLOR = (100, 50, 15)  # Darker brown, similar to EARTH_BROWN but darker
+
 # Voice Recognition Toggle Setting
 VOICE_RECOGNITION_ENABLED_BY_DEFAULT = True

@@ -84,8 +84,8 @@ X
 X
 X
 X                        S                              
-X                        X                            S                      E
-X      XXXXXXX           X              S             X             XXXXXXXXXX
+X        T        o      X      T T T   S                      E
+X      XXXXXXXaaaaaaaaaaaX              S             X             XXXXXXXXXX
 X      X     X                          X             X             X
 X      X     X                          X                           X
 X      X     X                                                      X
@@ -93,8 +93,9 @@ X      X     X                                                      XXXXXXXXXXX
 X      X     X
 X      X     X
 X      X     X
+X      X     X
 X P    X     XSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXTXTXTXTXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 """
 )
 

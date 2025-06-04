@@ -125,6 +125,10 @@ class MovementState:
         self.can_jump = True
         self.can_double_jump = True
 
+    def recharge_double_jump(self):
+        """Recharges the player's double jump ability."""
+        self.can_double_jump = True
+
     def decelerate(self):
         """Gradually reduce horizontal speed."""
         if self.is_running:
