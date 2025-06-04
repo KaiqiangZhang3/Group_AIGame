@@ -67,17 +67,44 @@ class Animator:
         # 'jump_transition' could be non-looping or short-looping depending on design
     ]
 
-    def __init__(self, base_sprites_path, default_fps=12):
+    def __init__(self, base_sprites_path, default_fps=12, use_trimmed=True):
         self.animations = {}
         self.current_action_name = None
         self.default_fps = default_fps
+        self.use_trimmed = use_trimmed
         self.placeholder_image = pygame.Surface((32, 32))
         self.placeholder_image.fill((255, 105, 180)) # Hot pink
         pygame.draw.line(self.placeholder_image, (0,0,0), (0,0), (31,31), 1)
         pygame.draw.line(self.placeholder_image, (0,0,0), (0,31), (31,0), 1)
 
         if base_sprites_path:
-            self.load_animations_from_directory(base_sprites_path)
+            # Modify the path if using trimmed sprites
+            if self.use_trimmed:
+                # Check if the base path ends with 'Sprites'
+                if base_sprites_path.endswith('Sprites'):
+                    # Replace 'Sprites' with 'Sprites_Trimmed'
+                    self.actual_sprites_path = base_sprites_path.replace('Sprites', 'Sprites_Trimmed')
+                    # If trimmed directory doesn't exist, fall back to original
+                    if not os.path.exists(self.actual_sprites_path):
+                        print(f"Warning: Trimmed sprites directory not found at '{self.actual_sprites_path}'.")
+                        print(f"         Falling back to original sprites at '{base_sprites_path}'.")
+                        self.actual_sprites_path = base_sprites_path
+                    else:
+                        print(f"Using trimmed sprites from '{self.actual_sprites_path}'")
+                else:
+                    # If the base path doesn't end with 'Sprites', just append '_Trimmed'
+                    self.actual_sprites_path = base_sprites_path + '_Trimmed'
+                    # If trimmed directory doesn't exist, fall back to original
+                    if not os.path.exists(self.actual_sprites_path):
+                        print(f"Warning: Trimmed sprites directory not found at '{self.actual_sprites_path}'.")
+                        print(f"         Falling back to original sprites at '{base_sprites_path}'.")
+                        self.actual_sprites_path = base_sprites_path
+                    else:
+                        print(f"Using trimmed sprites from '{self.actual_sprites_path}'")
+            else:
+                self.actual_sprites_path = base_sprites_path
+                
+            self.load_animations_from_directory(self.actual_sprites_path)
         else:
             print(f"Warning: Animator initialized with no base_sprites_path.")
 
