@@ -15,7 +15,7 @@ class Player(pygame.sprite.Sprite):
         sprites_base_path = os.path.join(os.path.dirname(__file__), '..', '..', 'Assets', 'Sprites')
         self.animator = Animator(sprites_base_path)
         self.image = self.animator.get_current_image()
-        self.rect = self.image.get_rect(topleft=pos)
+        self.rect = pygame.Rect(pos[0], pos[1], 20, 32)
 
         self.movement_state = MovementState() # Initialize movement state
 
@@ -72,6 +72,7 @@ class Player(pygame.sprite.Sprite):
         """Handle vertical collisions with obstacles."""
         # Collision checking (always happens)
         self.rect.y += self.movement_state.velocity[1]
+
         previous_on_ground = self.movement_state.on_ground
         self.movement_state.on_ground = False # Assume not on ground until collision check
         self.movement_state.air_frames += 1 # Increment air frames
@@ -174,6 +175,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self, dt):
         """Update player state (called every frame)."""
+        print(self.rect)
         # Input polling is still useful for continuous movement (left/right)
         self.continually_input() # Poll left/right keys
         self.movement_state.update()
@@ -200,5 +202,4 @@ class Player(pygame.sprite.Sprite):
         # Preserve the center of the rect when changing image/size to avoid jitter
         # This is a common strategy but might need fine-tuning based on sprite pivot points.
         current_center = self.rect.center
-        self.rect.size = self.image.get_size()
         self.rect.center = current_center

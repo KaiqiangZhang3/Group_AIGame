@@ -81,6 +81,10 @@ class Animator:
         else:
             print(f"Warning: Animator initialized with no base_sprites_path.")
 
+    def trim_surface(self, surface):
+        rect = surface.get_bounding_rect()
+        return surface.subsurface(rect).copy()
+
     def load_animations_from_directory(self, base_path):
         """Loads all animation sequences from subdirectories of base_path."""
         if not os.path.isdir(base_path):
@@ -110,7 +114,7 @@ class Animator:
                     for frame_file in sorted_files:
                         frame_path = os.path.join(action_path, frame_file)
                         try:
-                            image = pygame.image.load(frame_path).convert_alpha()
+                            image = self.trim_surface(pygame.image.load(frame_path).convert_alpha())
                             frames.append(image)
                         except pygame.error as e:
                             print(f"Warning: Could not load image '{frame_path}': {e}")
