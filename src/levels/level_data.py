@@ -83,63 +83,53 @@ XS                                                               SSSSSSSSS
 XS                                                               XXXXXXXXX                           
 XS                                                        o      XXXXXXXXX                  E            
 XS                                                                            XXXXXXXXXXXXXXXXXXXXXXX
-XS                                                             
+                                                    o         
 XS                                          M                                              
 XS                             o        XXXXXXXXX                                          
 XS                                      XXXXXXXXX                                          
-XS                                                             
-XS                                                             
+XS                        o                                                                                                  
 XS                                                             
 XS            aaaaaaaa                                               
 XS       o    SSSSSSSS                                               
 XS            XXXXXXXX                                               
-XS                                                             
-XS                                                             
-XS                                                             
+XS                                                                                                                                                                                       
 XS                                                             
 XS                                                             
 XS  TT                                                                                                                      
 XS  TT                                                o                                  
-XS                                                             
-XS                                                             
+XS                                                                                                                          
 XS                                                             
 XS                 SSSS        SSSS                                     S                  
 XS          TTTTTTT    aaaaaaaa    TTTTTTT                           TTTTTTTTT      
 XS                                                             
 XS                                                             
 XS                                                                                    o                      
-XS                                                             
-XS                                                             
+XS                                                                                                                          
 XS                                                             
 XS                                                                                              TT        
 XS                                                                                              TT        
-XS                                                             
-XS                                                             
+XS                                                                                                                          
 XS                                                             
 XS                                                                            TTTTTTTT                         
 XS                                                                            SSSSSSSS                         
 XS                                                                            XXXXXXXX                         
 XS                                                             
 XS                                                                   o
-XS                                                             
-XS                                                                                                      
-XS                                                             
-XS                                                             
+XS                                                            o
+XS                                                                                                                                                                                                                                
 XS                                             aaaaaaaaa                             
 XS                                             SSSSSSSSS                             
 XS                                             XXXXXXXXX                             
 XS                                      o                     
 XS                                                                                
-XS                                                             
+XS                             o                                
 XS                                                             
 XS              TTTTTTTTTT                                           
 XS              SSSSSSSSSS                                           
 XS              XXXXXXXXXX                                           
 XS              XXXXXXXXXX                                                 
 XS                                                             
-XS                                                             
-XS                                                                                                                         
-XS                                                             
+XS                                                                                                                                                                                                                                                   
 XS      p                                                        
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 """,
