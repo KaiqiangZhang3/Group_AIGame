@@ -21,7 +21,13 @@ def keyboard_handler(event, game_instance):
     """Handle keyboard input based on the current game state."""
     match game_instance.current_state:
         case GameState.PLAYING:  # Use Enum member
-            game_instance.input_buffer.add_input(event.key)  # Buffer the key press
+            # Special case for 'N' key to advance to next level
+            if event.key == pygame.K_n:
+                # Skip to next level immediately
+                print("Skipping to next level...")
+                game_instance.level_manager.next_level()
+            else:
+                game_instance.input_buffer.add_input(event.key)  # Buffer other key presses
         case _:
             game_instance.menu.handle_input(event)  # Assuming Menu has handle_input
 

@@ -16,9 +16,19 @@ class MovingSpike(pygame.sprite.Sprite):
         self.direction = 1 # 1 for right, -1 for left
         self.speed = MOVING_SPIKE_SPEED
 
-    def update(self):
-        """Move the spike horizontally and reverse direction at boundaries."""
-        self.rect.x += self.direction * self.speed
+    def update(self, dt=None):
+        """Move the spike horizontally and reverse direction at boundaries.
+        
+        Args:
+            dt: Delta time in seconds since last frame (optional, for frame rate independence)
+        """
+        # Apply movement (use dt if provided for frame rate independence)
+        if dt:
+            movement = self.direction * self.speed * dt * 60  # Scale by dt and normalize to 60fps
+        else:
+            movement = self.direction * self.speed
+            
+        self.rect.x += movement
 
         # Check boundaries and reverse direction
         if self.rect.centerx >= self.max_x:
